@@ -29,22 +29,22 @@ $current = basename($_SERVER['PHP_SELF']);
             <span><?= safe($user['role']) ?></span>
         </div>
 
-        <nav class="menu" style="height:calc(100vh - 220px); overflow-y:scroll; overflow-x:hidden; padding-bottom:80px;"><nav class="menu">
+        <nav class="menu" style="height:calc(100vh - 220px); overflow-y:scroll; overflow-x:hidden; padding-bottom:80px;">
             <a class="<?= $current=='dashboard.php'?'active':'' ?>" href="dashboard.php">🏠 Dashboard</a>
 
             <?php if (has_role(['Admin', 'Manager'])): ?>
                 <a class="<?= $current=='employees.php'?'active':'' ?>" href="employees.php">👥 员工管理</a>
                 <a class="<?= $current=='departments.php'?'active':'' ?>" href="departments.php">🏢 部门管理</a>
                 <a class="<?= $current=='schedule.php'?'active':'' ?>" href="schedule.php">📅 排班管理</a>
-                <a  class="<?= $current=='weekly_schedule.php'?'active':'' ?>"href="weekly_schedule.php">📅 周排班表</a>
+                <a class="<?= $current=='weekly_schedule.php'?'active':'' ?>" href="weekly_schedule.php">📅 周排班表</a>
                 <a class="<?= $current=='shifts.php'?'active':'' ?>" href="shifts.php">⏰ 班次管理</a>
+                <a class="<?= $current=='leave_manage.php'?'active':'' ?>" href="leave_manage.php">✅ 请假管理</a>
             <?php endif; ?>
 
-            <a class="<?= $current=='my_schedule.php'?'active':'' ?>" href="my_schedule.php">🗓️ 我的排班</a>
             <a class="<?= $current=='announcements.php'?'active':'' ?>" href="announcements.php">📢 公告中心</a>
-         <a class="<?= $current=='leave_apply.php'?'active':'' ?>" href="leave_apply.php">📝 申请请假</a>
-<a class="<?= $current=='leave_manage.php'?'active':'' ?>" href="leave_manage.php">✅ 请假管理</a>
-<a class="<?= $current=='my_leave.php'?'active':'' ?>" href="my_leave.php">📄 我的请假</a>
+            <a class="<?= $current=='leave_apply.php'?'active':'' ?>" href="leave_apply.php">📝 申请请假</a>
+            <a class="<?= $current=='my_schedule.php'?'active':'' ?>" href="my_schedule.php">🗓️ 我的排班</a>
+            <a class="<?= $current=='my_leave.php'?'active':'' ?>" href="my_leave.php">📄 我的请假</a>
             <a href="logout.php">🚪 退出登录</a>
         </nav>
     </aside>
