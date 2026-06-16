@@ -41,6 +41,10 @@ $current = basename($_SERVER['PHP_SELF']);
                 <a class="<?= $current=='leave_manage.php'?'active':'' ?>" href="leave_manage.php">✅ 请假管理</a>
             <?php endif; ?>
 
+            <?php if (has_role(['Admin'])): ?>
+                <a class="<?= in_array($current,['users.php','user_edit.php'])?'active':'' ?>" href="users.php">👤 用户管理</a>
+            <?php endif; ?>
+
             <a class="<?= $current=='announcements.php'?'active':'' ?>" href="announcements.php">📢 公告中心</a>
             <a class="<?= $current=='leave_apply.php'?'active':'' ?>" href="leave_apply.php">📝 申请请假</a>
             <a class="<?= $current=='my_schedule.php'?'active':'' ?>" href="my_schedule.php">🗓️ 我的排班</a>

@@ -6,6 +6,7 @@ $message = "";
 
 // 新增员工
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add') {
+    verify_csrf();
     $stmt = $pdo->prepare("
         INSERT INTO employees (name, department_id, position, phone, email, status)
         VALUES (?, ?, ?, ?, ?, ?)
@@ -25,6 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add')
 
 // 编辑员工
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'edit') {
+    verify_csrf();
     $stmt = $pdo->prepare("
         UPDATE employees
         SET name = ?, department_id = ?, position = ?, phone = ?, email = ?, status = ?
