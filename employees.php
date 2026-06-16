@@ -45,10 +45,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'edit'
 }
 
 // 删除员工
-if (isset($_GET['delete'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete') {
+    verify_csrf();
     $stmt = $pdo->prepare("DELETE FROM employees WHERE id = ?");
-    $stmt->execute([$_GET['delete']]);
-
+    $stmt->execute([intval($_POST['id'])]);
     $message = "员工已删除";
 }
 
@@ -87,6 +87,7 @@ if (isset($_GET['edit'])) {
     <h2><?= $editEmployee ? '编辑员工' : '新增员工' ?></h2>
 
     <form method="POST">
+        <?= csrf_field() ?>
         <input type="hidden" name="action" value="<?= $editEmployee ? 'edit' : 'add' ?>">
 
         <?php if ($editEmployee): ?>
@@ -177,10 +178,12 @@ if (isset($_GET['edit'])) {
                 <td>
                     <a href="employees.php?edit=<?= safe($e['id']) ?>">编辑</a>
                     |
-                    <a href="employees.php?delete=<?= safe($e['id']) ?>"
-                       onclick="return confirm('确定要删除这个员工吗？')">
-                       删除
-                    </a>
+                    <form method="POST" style="display:inline;" onsubmit="return confirm('确定要删除这个员工吗？')">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="id" value="<?= safe($e['id']) ?>">
+                        <button type="submit" class="btn-link">删除</button>
+                    </form>
                 </td>
             </tr>
         <?php endforeach; ?>

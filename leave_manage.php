@@ -4,24 +4,20 @@ require_role(['Admin', 'Manager']);
 
 $message = '';
 
-if (isset($_GET['approve'])) {
-    $stmt = $pdo->prepare("
-        UPDATE leaves
-        SET status = 'Approved', approve_remark = '已批准'
-        WHERE id = ?
-    ");
-    $stmt->execute([$_GET['approve']]);
-    $message = '请假申请已批准';
-}
-
-if (isset($_GET['reject'])) {
-    $stmt = $pdo->prepare("
-        UPDATE leaves
-        SET status = 'Rejected', approve_remark = '已拒绝'
-        WHERE id = ?
-    ");
-    $stmt->execute([$_GET['reject']]);
-    $message = '请假申请已拒绝';
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    verify_csrf();
+    $leaveId = intval($_POST['leave_id'] ?? 0);
+    if ($leaveId) {
+        if ($_POST['action'] === 'approve') {
+            $stmt = $pdo->prepare("UPDATE leaves SET status = 'Approved', approve_remark = '已批准' WHERE id = ?");
+            $stmt->execute([$leaveId]);
+            $message = '请假申请已批准';
+        } elseif ($_POST['action'] === 'reject') {
+            $stmt = $pdo->prepare("UPDATE leaves SET status = 'Rejected', approve_remark = '已拒绝' WHERE id = ?");
+            $stmt->execute([$leaveId]);
+            $message = '请假申请已拒绝';
+        }
+    }
 }
 
 $leaves = $pdo->query("
@@ -91,9 +87,19 @@ function leaveStatusText($status) {
                     <td><span class="badge"><?= safe(leaveStatusText($l['status'])) ?></span></td>
                     <td>
                         <?php if($l['status'] === 'Pending'): ?>
-                            <a href="leave_manage.php?approve=<?= safe($l['id']) ?>">批准</a>
+                            <form method="POST" style="display:inline;">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="leave_id" value="<?= safe($l['id']) ?>">
+                                <input type="hidden" name="action" value="approve">
+                                <button type="submit" class="btn-link">批准</button>
+                            </form>
                             |
-                            <a href="leave_manage.php?reject=<?= safe($l['id']) ?>">拒绝</a>
+                            <form method="POST" style="display:inline;">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="leave_id" value="<?= safe($l['id']) ?>">
+                                <input type="hidden" name="action" value="reject">
+                                <button type="submit" class="btn-link">拒绝</button>
+                            </form>
                         <?php else: ?>
                             <?= safe($l['approve_remark'] ?? '-') ?>
                         <?php endif; ?>
