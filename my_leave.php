@@ -1,19 +1,23 @@
 <?php
 require_once __DIR__ . '/header.php';
 
-$userName = $_SESSION['user']['name'] ?? $_SESSION['username'] ?? '系统管理员';
+$userName    = $_SESSION['user']['name'] ?? '';
+$employeeId  = $_SESSION['user']['employee_id'] ?? null;
+$leaves      = [];
+$noEmployee  = false;
 
-$stmt = $pdo->prepare("
-    SELECT 
-        l.*,
-        e.name AS employee_name
-    FROM leaves l
-    JOIN employees e ON l.employee_id = e.id
-    WHERE e.name = ?
-    ORDER BY l.created_at DESC
-");
-$stmt->execute([$userName]);
-$leaves = $stmt->fetchAll();
+if ($employeeId) {
+    $stmt = $pdo->prepare("
+        SELECT l.*
+        FROM leaves l
+        WHERE l.employee_id = ?
+        ORDER BY l.created_at DESC
+    ");
+    $stmt->execute([$employeeId]);
+    $leaves = $stmt->fetchAll();
+} else {
+    $noEmployee = true;
+}
 
 function leaveStatusText($status) {
     if ($status === 'Pending') return '待审批';
@@ -34,6 +38,9 @@ function leaveStatusText($status) {
         <a href="leave_apply.php">申请请假</a>
     </div>
 
+    <?php if ($noEmployee): ?>
+        <p style="color:#999;">此账号尚未绑定员工资料，暂无记录。</p>
+    <?php else: ?>
     <table>
         <tr>
             <th>类型</th>
@@ -61,6 +68,7 @@ function leaveStatusText($status) {
             <?php endforeach; ?>
         <?php endif; ?>
     </table>
+    <?php endif; ?>
 </section>
 
 <?php require_once __DIR__ . '/footer.php'; ?>
