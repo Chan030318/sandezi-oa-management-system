@@ -49,6 +49,7 @@ $current = basename($_SERVER['PHP_SELF']);
             <a class="<?= $current=='leave_apply.php'?'active':'' ?>" href="leave_apply.php">📝 申请请假</a>
             <a class="<?= $current=='my_schedule.php'?'active':'' ?>" href="my_schedule.php">🗓️ 我的排班</a>
             <a class="<?= $current=='my_leave.php'?'active':'' ?>" href="my_leave.php">📄 我的请假</a>
+            <a class="<?= $current=='change_password.php'?'active':'' ?>" href="change_password.php">🔑 修改密码</a>
             <a href="logout.php">🚪 退出登录</a>
         </nav>
     </aside>
