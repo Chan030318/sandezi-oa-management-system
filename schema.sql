@@ -3,6 +3,7 @@ USE sandezi_oa_plus;
 
 SET FOREIGN_KEY_CHECKS=0;
 DROP TABLE IF EXISTS announcements;
+DROP TABLE IF EXISTS leaves;
 DROP TABLE IF EXISTS schedules;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS employees;
@@ -62,6 +63,19 @@ CREATE TABLE schedules (
     FOREIGN KEY (shift_id) REFERENCES shifts(id) ON DELETE CASCADE,
     FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
     UNIQUE KEY unique_employee_date (employee_id, work_date)
+);
+
+CREATE TABLE leaves (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    employee_id INT NOT NULL,
+    leave_type VARCHAR(50) NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    reason TEXT,
+    status ENUM('Pending','Approved','Rejected') NOT NULL DEFAULT 'Pending',
+    approve_remark VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE
 );
 
 CREATE TABLE announcements (
