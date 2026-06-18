@@ -15,9 +15,9 @@ $current = basename($_SERVER['PHP_SELF']);
 </head>
 <body>
 <div class="layout">
-   <aside class="sidebar" style="height:100vh; overflow:hidden;">
+   <aside class="sidebar">
         <div class="brand">
-            <div class="brand-logo">三</div>
+            <img src="assets/logo.jpg" alt="三德子" class="brand-logo-img">
             <div>
                 <h2>三德子</h2>
                 <p>OA 管理系统</p>
@@ -29,7 +29,7 @@ $current = basename($_SERVER['PHP_SELF']);
             <span><?= safe($user['role']) ?></span>
         </div>
 
-        <nav class="menu" style="height:calc(100vh - 220px); overflow-y:scroll; overflow-x:hidden; padding-bottom:80px;">
+        <nav class="menu">
             <a class="<?= $current=='dashboard.php'?'active':'' ?>" href="dashboard.php">🏠 Dashboard</a>
 
             <?php if (has_role(['Admin', 'Manager'])): ?>

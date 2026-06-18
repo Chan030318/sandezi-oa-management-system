@@ -2,51 +2,53 @@
 require_once __DIR__ . '/header.php';
 require_role(['Admin', 'Manager']);
 
-$message = "";
+$message      = '';
+$messageType  = 'success';
 
 // 新增排班
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add') {
+    verify_csrf();
     $stmt = $pdo->prepare("
-       INSERT INTO schedules (employee_id, shift_id, work_date, remark)
-VALUES (?, ?, ?, ?)
-ON DUPLICATE KEY UPDATE
-shift_id = VALUES(shift_id),
-remark = VALUES(remark),
-created_at = CURRENT_TIMESTAMP
+        INSERT INTO schedules (employee_id, shift_id, work_date, remark)
+        VALUES (?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+            shift_id   = VALUES(shift_id),
+            remark     = VALUES(remark),
+            created_at = CURRENT_TIMESTAMP
     ");
     $stmt->execute([
-        $_POST['employee_id'],
-        $_POST['shift_id'],
+        intval($_POST['employee_id']),
+        intval($_POST['shift_id']),
         $_POST['work_date'],
-        $_POST['remark']
+        trim($_POST['remark'] ?? '')
     ]);
-
-    $message = "排班新增成功";
+    $message = '排班新增成功';
 }
 
 // 编辑排班
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'edit') {
+    verify_csrf();
     $stmt = $pdo->prepare("
         UPDATE schedules
         SET employee_id = ?, shift_id = ?, work_date = ?, remark = ?
         WHERE id = ?
     ");
     $stmt->execute([
-        $_POST['employee_id'],
-        $_POST['shift_id'],
+        intval($_POST['employee_id']),
+        intval($_POST['shift_id']),
         $_POST['work_date'],
-        $_POST['remark'],
-        $_POST['id']
+        trim($_POST['remark'] ?? ''),
+        intval($_POST['id'])
     ]);
-
-    $message = "排班已更新";
+    $message = '排班已更新';
 }
 
-// 删除排班
-if (isset($_GET['delete'])) {
-    $stmt = $pdo->prepare("DELETE FROM schedules WHERE id = ?");
-    $stmt->execute([$_GET['delete']]);
-    $message = "排班已删除";
+// 删除排班（POST）
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete') {
+    verify_csrf();
+    $pdo->prepare("DELETE FROM schedules WHERE id = ?")->execute([intval($_POST['id'])]);
+    $message = '排班已删除';
+    $messageType = 'success';
 }
 
 // 员工列表
@@ -59,22 +61,20 @@ $employees = $pdo->query("
 ")->fetchAll();
 
 // 班次列表
-$shifts = $pdo->query("
-    SELECT * FROM shifts
-    ORDER BY id ASC
-")->fetchAll();
+$shifts = $pdo->query("SELECT * FROM shifts ORDER BY id ASC")->fetchAll();
 
 // 编辑资料
 $editSchedule = null;
 if (isset($_GET['edit'])) {
+    $eid  = intval($_GET['edit']);
     $stmt = $pdo->prepare("SELECT * FROM schedules WHERE id = ?");
-    $stmt->execute([$_GET['edit']]);
+    $stmt->execute([$eid]);
     $editSchedule = $stmt->fetch();
 }
 
 // 排班记录
 $schedules = $pdo->query("
-    SELECT 
+    SELECT
         s.id,
         s.work_date,
         s.remark,
@@ -92,7 +92,7 @@ $schedules = $pdo->query("
 ")->fetchAll();
 
 function shortTime($time) {
-    if (!$time) return "-";
+    if (!$time) return '-';
     return substr($time, 0, 5);
 }
 ?>
@@ -103,17 +103,16 @@ function shortTime($time) {
 </div>
 
 <?php if ($message): ?>
-    <div class="panel" style="color:#9b1c1c;font-weight:bold;">
+    <div class="<?= $messageType === 'success' ? 'success' : 'alert' ?>">
         <?= safe($message) ?>
     </div>
 <?php endif; ?>
 
 <section class="panel">
     <h2><?= $editSchedule ? '编辑排班' : '新增排班' ?></h2>
-
     <form method="POST">
+        <?= csrf_field() ?>
         <input type="hidden" name="action" value="<?= $editSchedule ? 'edit' : 'add' ?>">
-
         <?php if ($editSchedule): ?>
             <input type="hidden" name="id" value="<?= safe($editSchedule['id']) ?>">
         <?php endif; ?>
@@ -131,12 +130,11 @@ function shortTime($time) {
                     <?php endforeach; ?>
                 </select>
             </div>
-
             <div>
                 <label>日期</label>
-                <input type="date" name="work_date" required value="<?= safe($editSchedule['work_date'] ?? date('Y-m-d')) ?>">
+                <input type="date" name="work_date" required
+                       value="<?= safe($editSchedule['work_date'] ?? date('Y-m-d')) ?>">
             </div>
-
             <div>
                 <label>班次</label>
                 <select name="shift_id" required>
@@ -149,64 +147,57 @@ function shortTime($time) {
                     <?php endforeach; ?>
                 </select>
             </div>
-
             <div>
                 <label>备注</label>
-                <input type="text" name="remark" value="<?= safe($editSchedule['remark'] ?? '') ?>" placeholder="例如：临时调整 / 代班">
+                <input type="text" name="remark"
+                       value="<?= safe($editSchedule['remark'] ?? '') ?>"
+                       placeholder="例如：临时调整 / 代班">
             </div>
         </div>
 
-        <button class="btn" type="submit">
-            <?= $editSchedule ? '保存修改' : '新增排班' ?>
-        </button>
-
+        <button class="btn" type="submit"><?= $editSchedule ? '保存修改' : '新增排班' ?></button>
         <?php if ($editSchedule): ?>
-            <a class="btn secondary" href="schedule.php">取消编辑</a>
+            <a class="btn-light" href="schedule.php">取消编辑</a>
         <?php endif; ?>
     </form>
 </section>
 
 <section class="panel">
     <h2>排班记录</h2>
-
+    <div style="overflow-x:auto;">
     <table>
         <tr>
-            <th>日期</th>
-            <th>员工</th>
-            <th>部门</th>
-            <th>岗位</th>
-            <th>班次</th>
-            <th>时间</th>
-            <th>备注</th>
-            <th>操作</th>
+            <th>日期</th><th>员工</th><th>部门</th><th>岗位</th>
+            <th>班次</th><th>时间</th><th>备注</th><th>操作</th>
         </tr>
-
         <?php if (empty($schedules)): ?>
-            <tr>
-                <td colspan="8" style="text-align:center;color:#999;">暂无排班记录</td>
-            </tr>
+            <tr><td colspan="8" style="text-align:center;color:#999;">暂无排班记录</td></tr>
         <?php else: ?>
             <?php foreach ($schedules as $row): ?>
-                <tr>
-                    <td><?= safe($row['work_date']) ?></td>
-                    <td><?= safe($row['employee_name']) ?></td>
-                    <td><?= safe($row['department_name'] ?? '-') ?></td>
-                    <td><?= safe($row['position']) ?></td>
-                    <td><span class="badge"><?= safe($row['shift_name']) ?></span></td>
-                    <td><?= safe(shortTime($row['start_time'])) ?> - <?= safe(shortTime($row['end_time'])) ?></td>
-                    <td><?= safe($row['remark'] ?? '-') ?></td>
-                    <td>
-                        <a href="schedule.php?edit=<?= safe($row['id']) ?>">编辑</a>
-                        |
-                        <a href="schedule.php?delete=<?= safe($row['id']) ?>"
-                           onclick="return confirm('确定要删除这条排班吗？')">
-                           删除
-                        </a>
-                    </td>
-                </tr>
+            <tr>
+                <td><?= safe($row['work_date']) ?></td>
+                <td><?= safe($row['employee_name']) ?></td>
+                <td><?= safe($row['department_name'] ?? '-') ?></td>
+                <td><?= safe($row['position']) ?></td>
+                <td><span class="badge"><?= safe($row['shift_name']) ?></span></td>
+                <td><?= safe(shortTime($row['start_time'])) ?> - <?= safe(shortTime($row['end_time'])) ?></td>
+                <td><?= safe($row['remark'] ?? '-') ?></td>
+                <td>
+                    <a href="schedule.php?edit=<?= safe($row['id']) ?>">编辑</a>
+                    |
+                    <form method="POST" style="display:inline;"
+                          onsubmit="return confirm('确定要删除这条排班吗？')">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="id" value="<?= safe($row['id']) ?>">
+                        <button type="submit" class="btn-link">删除</button>
+                    </form>
+                </td>
+            </tr>
             <?php endforeach; ?>
         <?php endif; ?>
     </table>
+    </div>
 </section>
 
 <?php require_once __DIR__ . '/footer.php'; ?>

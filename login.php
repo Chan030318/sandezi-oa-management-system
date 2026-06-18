@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body class="login-body">
     <div class="login-wrap">
         <div class="login-intro">
-            <div class="brand-logo big">三</div>
+            <img src="assets/logo.jpg" alt="三德子" class="login-logo">
             <h1>三德子 OA 管理系统</h1>
             <p>员工管理 · 排班管理 · 数据看板</p>
         </div>
