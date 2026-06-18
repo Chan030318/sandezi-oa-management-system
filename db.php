@@ -12,6 +12,8 @@ try {
         ]
     );
 } catch (PDOException $e) {
-    die("数据库连接失败：" . $e->getMessage());
+    // 生产环境不暴露数据库错误细节
+    error_log("DB connection failed: " . $e->getMessage());
+    die("系统暂时无法连接，请稍后再试或联系管理员。");
 }
 ?>

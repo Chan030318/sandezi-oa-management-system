@@ -1,0 +1,18 @@
+# 数据库配置（含密码，不进 git）
+config.php
+
+# 本地测试配置
+config.local.php
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# PHP 错误日志
+*.log
+error_log
+
+# 编辑器
+.vscode/
+.idea/
+*.swp

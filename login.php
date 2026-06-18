@@ -67,9 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <button type="submit">登录系统</button>
             </form>
 
-            <div class="demo-account">
-                测试账号：admin@sandezi.com / password
-            </div>
+            <!-- 生产环境已移除测试账号提示 -->
         </div>
     </div>
 </body>
