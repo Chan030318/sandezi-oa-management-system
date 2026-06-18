@@ -1,18 +1,19 @@
-# 数据库配置（含密码，不进 git）
+# Database credentials - NEVER commit this
 config.php
-
-# 本地测试配置
 config.local.php
 
-# 系统文件
+# OS files
 .DS_Store
 Thumbs.db
 
-# PHP 错误日志
+# PHP error logs
 *.log
 error_log
 
-# 编辑器
+# Editor directories
 .vscode/
 .idea/
 *.swp
+
+# Claude internal
+.claude/
