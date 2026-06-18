@@ -48,6 +48,10 @@ $current = basename($_SERVER['PHP_SELF']);
             <?php endif; ?>
 
             <a class="<?= $current=='devices.php'?'active':'' ?>" href="devices.php">📦 设备管理</a>
+            <a class="<?= $current=='device_borrow.php'?'active':'' ?>" href="device_borrow.php">📤 设备借用</a>
+            <?php if (has_role(['Admin', 'Manager'])): ?>
+                <a class="<?= $current=='device_borrow_manage.php'?'active':'' ?>" href="device_borrow_manage.php">📋 借用审批</a>
+            <?php endif; ?>
             <a class="<?= $current=='announcements.php'?'active':'' ?>" href="announcements.php">📢 公告中心</a>
             <a class="<?= $current=='leave_apply.php'?'active':'' ?>" href="leave_apply.php">📝 申请请假</a>
             <a class="<?= $current=='my_schedule.php'?'active':'' ?>" href="my_schedule.php">🗓️ 我的排班</a>

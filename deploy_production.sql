@@ -1,6 +1,6 @@
 -- ============================================================
 -- 三德子 OA 系统 — 生产部署 SQL
--- Phase 1 · 版本 b128be2
+-- Phase 1 + Phase 2 + Phase 3.1
 -- 生成日期：2026-06-18
 -- 用途：首次上线时在生产服务器执行
 -- 注意：执行前请先备份现有数据库
@@ -13,6 +13,7 @@ CREATE DATABASE IF NOT EXISTS sandezi_oa_plus
 USE sandezi_oa_plus;
 
 SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS device_borrows;
 DROP TABLE IF EXISTS devices;
 DROP TABLE IF EXISTS login_logs;
 DROP TABLE IF EXISTS announcements;
@@ -23,6 +24,8 @@ DROP TABLE IF EXISTS employees;
 DROP TABLE IF EXISTS shifts;
 DROP TABLE IF EXISTS departments;
 SET FOREIGN_KEY_CHECKS = 1;
+
+-- ── 基础表 ────────────────────────────────────────────────────
 
 -- 部门
 CREATE TABLE departments (
@@ -58,6 +61,8 @@ CREATE TABLE users (
     FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE SET NULL
 );
 
+-- ── 排班 ──────────────────────────────────────────────────────
+
 -- 班次
 CREATE TABLE shifts (
     id          INT AUTO_INCREMENT PRIMARY KEY,
@@ -68,7 +73,7 @@ CREATE TABLE shifts (
     created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 排班
+-- 排班记录
 CREATE TABLE schedules (
     id          INT AUTO_INCREMENT PRIMARY KEY,
     employee_id INT NOT NULL,
@@ -83,7 +88,8 @@ CREATE TABLE schedules (
     UNIQUE KEY unique_employee_date (employee_id, work_date)
 );
 
--- 请假
+-- ── 请假 ──────────────────────────────────────────────────────
+
 CREATE TABLE leaves (
     id             INT AUTO_INCREMENT PRIMARY KEY,
     employee_id    INT NOT NULL,
@@ -97,7 +103,8 @@ CREATE TABLE leaves (
     FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE
 );
 
--- 登录日志
+-- ── 登录日志 ──────────────────────────────────────────────────
+
 CREATE TABLE login_logs (
     id         INT AUTO_INCREMENT PRIMARY KEY,
     email      VARCHAR(150) NOT NULL,
@@ -107,32 +114,14 @@ CREATE TABLE login_logs (
     status     ENUM('success','failed') NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
-    INDEX idx_email    (email),
-    INDEX idx_ip       (ip),
-    INDEX idx_status   (status),
-    INDEX idx_created  (created_at)
+    INDEX idx_ll_email   (email),
+    INDEX idx_ll_ip      (ip),
+    INDEX idx_ll_status  (status),
+    INDEX idx_ll_created (created_at)
 );
 
--- 设备台账
-CREATE TABLE devices (
-    id            INT AUTO_INCREMENT PRIMARY KEY,
-    device_code   VARCHAR(50)  NULL UNIQUE COMMENT '设备编号',
-    asset_code    VARCHAR(50)  NULL        COMMENT '资产编号（财务）',
-    name          VARCHAR(150) NOT NULL    COMMENT '设备名称',
-    category      VARCHAR(100) NOT NULL DEFAULT '' COMMENT '设备类别',
-    brand         VARCHAR(100) NOT NULL DEFAULT '' COMMENT '品牌',
-    model         VARCHAR(100) NOT NULL DEFAULT '' COMMENT '型号',
-    serial_number VARCHAR(100) NULL        COMMENT '序列号/SN',
-    department_id INT NULL                 COMMENT '所属部门',
-    manager       VARCHAR(100) NOT NULL DEFAULT '' COMMENT '负责人',
-    status        ENUM('空闲','使用中','维修中','报废') NOT NULL DEFAULT '空闲',
-    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE SET NULL,
-    INDEX idx_category (category),
-    INDEX idx_status   (status)
-);
+-- ── 公告 ──────────────────────────────────────────────────────
 
--- 公告
 CREATE TABLE announcements (
     id         INT AUTO_INCREMENT PRIMARY KEY,
     title      VARCHAR(200) NOT NULL,
@@ -140,6 +129,49 @@ CREATE TABLE announcements (
     created_by INT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+);
+
+-- ── Phase 3：设备管理 ─────────────────────────────────────────
+
+-- 设备台账
+CREATE TABLE devices (
+    id            INT AUTO_INCREMENT PRIMARY KEY,
+    device_code   VARCHAR(50)  NULL UNIQUE COMMENT '设备编号',
+    asset_code    VARCHAR(50)  NULL        COMMENT '资产编号（财务）',
+    name          VARCHAR(150) NOT NULL    COMMENT '设备名称',
+    category      VARCHAR(100) NOT NULL DEFAULT '',
+    brand         VARCHAR(100) NOT NULL DEFAULT '',
+    model         VARCHAR(100) NOT NULL DEFAULT '',
+    serial_number VARCHAR(100) NULL        COMMENT '序列号/SN',
+    department_id INT NULL,
+    manager       VARCHAR(100) NOT NULL DEFAULT '',
+    status        ENUM('空闲','使用中','维修中','报废') NOT NULL DEFAULT '空闲',
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE SET NULL,
+    INDEX idx_dev_category (category),
+    INDEX idx_dev_status   (status)
+);
+
+-- 设备借用记录
+CREATE TABLE device_borrows (
+    id           INT AUTO_INCREMENT PRIMARY KEY,
+    device_id    INT NOT NULL,
+    employee_id  INT NULL,
+    purpose      TEXT NOT NULL,
+    borrow_start DATE NOT NULL,
+    borrow_end   DATE NOT NULL,
+    status       ENUM('待审批','已批准','已拒绝','已归还') NOT NULL DEFAULT '待审批',
+    approved_by  INT NULL,
+    approved_at  DATETIME NULL,
+    returned_at  DATETIME NULL,
+    return_note  VARCHAR(500) NULL,
+    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (device_id)   REFERENCES devices(id)   ON DELETE CASCADE,
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE SET NULL,
+    FOREIGN KEY (approved_by) REFERENCES users(id)     ON DELETE SET NULL,
+    INDEX idx_db_device (device_id),
+    INDEX idx_db_emp    (employee_id),
+    INDEX idx_db_status (status)
 );
 
 -- ============================================================
