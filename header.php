@@ -47,6 +47,7 @@ $current = basename($_SERVER['PHP_SELF']);
                 <a class="<?= $current=='login_logs.php'?'active':'' ?>" href="login_logs.php">📋 登录日志</a>
             <?php endif; ?>
 
+            <a class="<?= $current=='devices.php'?'active':'' ?>" href="devices.php">📦 设备管理</a>
             <a class="<?= $current=='announcements.php'?'active':'' ?>" href="announcements.php">📢 公告中心</a>
             <a class="<?= $current=='leave_apply.php'?'active':'' ?>" href="leave_apply.php">📝 申请请假</a>
             <a class="<?= $current=='my_schedule.php'?'active':'' ?>" href="my_schedule.php">🗓️ 我的排班</a>

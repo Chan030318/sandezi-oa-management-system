@@ -13,6 +13,7 @@ CREATE DATABASE IF NOT EXISTS sandezi_oa_plus
 USE sandezi_oa_plus;
 
 SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS devices;
 DROP TABLE IF EXISTS login_logs;
 DROP TABLE IF EXISTS announcements;
 DROP TABLE IF EXISTS leaves;
@@ -110,6 +111,25 @@ CREATE TABLE login_logs (
     INDEX idx_ip       (ip),
     INDEX idx_status   (status),
     INDEX idx_created  (created_at)
+);
+
+-- 设备台账
+CREATE TABLE devices (
+    id            INT AUTO_INCREMENT PRIMARY KEY,
+    device_code   VARCHAR(50)  NULL UNIQUE COMMENT '设备编号',
+    asset_code    VARCHAR(50)  NULL        COMMENT '资产编号（财务）',
+    name          VARCHAR(150) NOT NULL    COMMENT '设备名称',
+    category      VARCHAR(100) NOT NULL DEFAULT '' COMMENT '设备类别',
+    brand         VARCHAR(100) NOT NULL DEFAULT '' COMMENT '品牌',
+    model         VARCHAR(100) NOT NULL DEFAULT '' COMMENT '型号',
+    serial_number VARCHAR(100) NULL        COMMENT '序列号/SN',
+    department_id INT NULL                 COMMENT '所属部门',
+    manager       VARCHAR(100) NOT NULL DEFAULT '' COMMENT '负责人',
+    status        ENUM('空闲','使用中','维修中','报废') NOT NULL DEFAULT '空闲',
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE SET NULL,
+    INDEX idx_category (category),
+    INDEX idx_status   (status)
 );
 
 -- 公告
