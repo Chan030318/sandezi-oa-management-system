@@ -87,11 +87,9 @@ I build practical web systems — from internal operations tools to public-facin
 
 ## 📊 GitHub Stats
 
-![Alvin's GitHub Stats](https://github-readme-stats.vercel.app/api?username=YOUR_GITHUB_USERNAME&show_icons=true&theme=default&hide_border=true&count_private=true)
+![Alvin's GitHub Stats](https://github-readme-stats.vercel.app/api?username=Chan030318&show_icons=true&theme=default&hide_border=true&count_private=true)
 
-![Top Languages](https://github-readme-stats.vercel.app/api/top-langs/?username=YOUR_GITHUB_USERNAME&layout=compact&hide_border=true&theme=default)
-
-> Replace `YOUR_GITHUB_USERNAME` with your actual GitHub username to activate the stats cards.
+![Top Languages](https://github-readme-stats.vercel.app/api/top-langs/?username=Chan030318&layout=compact&hide_border=true&theme=default)
 
 ---
 
