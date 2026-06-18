@@ -39,6 +39,7 @@ $current = basename($_SERVER['PHP_SELF']);
                 <a class="<?= $current=='weekly_schedule.php'?'active':'' ?>" href="weekly_schedule.php">📅 周排班表</a>
                 <a class="<?= $current=='shifts.php'?'active':'' ?>" href="shifts.php">⏰ 班次管理</a>
                 <a class="<?= $current=='leave_manage.php'?'active':'' ?>" href="leave_manage.php">✅ 请假管理</a>
+                <a class="<?= $current=='reports.php'?'active':'' ?>" href="reports.php">📊 报表导出</a>
             <?php endif; ?>
 
             <?php if (has_role(['Admin'])): ?>
