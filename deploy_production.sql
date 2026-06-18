@@ -13,6 +13,7 @@ CREATE DATABASE IF NOT EXISTS sandezi_oa_plus
 USE sandezi_oa_plus;
 
 SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS login_logs;
 DROP TABLE IF EXISTS announcements;
 DROP TABLE IF EXISTS leaves;
 DROP TABLE IF EXISTS schedules;
@@ -93,6 +94,22 @@ CREATE TABLE leaves (
     approve_remark VARCHAR(255),
     created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE
+);
+
+-- 登录日志
+CREATE TABLE login_logs (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    email      VARCHAR(150) NOT NULL,
+    user_id    INT NULL,
+    ip         VARCHAR(45)  NOT NULL DEFAULT '',
+    user_agent VARCHAR(512) NOT NULL DEFAULT '',
+    status     ENUM('success','failed') NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_email    (email),
+    INDEX idx_ip       (ip),
+    INDEX idx_status   (status),
+    INDEX idx_created  (created_at)
 );
 
 -- 公告

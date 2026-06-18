@@ -43,6 +43,7 @@ $current = basename($_SERVER['PHP_SELF']);
 
             <?php if (has_role(['Admin'])): ?>
                 <a class="<?= in_array($current,['users.php','user_edit.php'])?'active':'' ?>" href="users.php">👤 用户管理</a>
+                <a class="<?= $current=='login_logs.php'?'active':'' ?>" href="login_logs.php">📋 登录日志</a>
             <?php endif; ?>
 
             <a class="<?= $current=='announcements.php'?'active':'' ?>" href="announcements.php">📢 公告中心</a>

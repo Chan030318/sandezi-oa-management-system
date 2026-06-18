@@ -4,8 +4,18 @@ require_once __DIR__ . '/db.php';
 
 $error = '';
 
+// 写登录日志辅助函数
+function write_login_log($pdo, $email, $user_id, $status) {
+    $ip         = $_SERVER['REMOTE_ADDR']     ?? '';
+    $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+    $pdo->prepare("
+        INSERT INTO login_logs (email, user_id, ip, user_agent, status)
+        VALUES (?, ?, ?, ?, ?)
+    ")->execute([$email, $user_id, $ip, $user_agent, $status]);
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = trim($_POST['email'] ?? '');
+    $email    = trim($_POST['email']    ?? '');
     $password = $_POST['password'] ?? '';
 
     $stmt = $pdo->prepare("
@@ -19,18 +29,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($user && password_verify($password, $user['password_hash'])) {
         $_SESSION['user'] = [
-            'id' => $user['id'],
-            'employee_id' => $user['employee_id'],
-            'name' => $user['name'],
-            'email' => $user['email'],
-            'role' => $user['role'],
+            'id'            => $user['id'],
+            'employee_id'   => $user['employee_id'],
+            'name'          => $user['name'],
+            'email'         => $user['email'],
+            'role'          => $user['role'],
             'department_id' => $user['department_id'] ?? null,
-            'position' => $user['position'] ?? ''
+            'position'      => $user['position'] ?? ''
         ];
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        write_login_log($pdo, $email, $user['id'], 'success');
         header("Location: dashboard.php");
         exit;
     } else {
-        $error = "邮箱或密码错误";
+        $error = '邮箱或密码错误';
+        $user_id = $user['id'] ?? null; // 账号存在但密码错 vs 账号不存在
+        write_login_log($pdo, $email, $user_id, 'failed');
     }
 }
 ?>
@@ -51,23 +65,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <div class="login-card">
             <h2>账号登录</h2>
-            <p class="muted">第一阶段测试环境</p>
+            <p class="muted">企业内部管理系统</p>
 
             <?php if ($error): ?>
                 <div class="alert"><?= htmlspecialchars($error) ?></div>
             <?php endif; ?>
 
-            <form method="post">
+            <form method="POST">
                 <label>邮箱</label>
-                <input type="email" name="email" required placeholder="admin@sandezi.com">
+                <input type="email" name="email" required placeholder="your@sandezi.com">
 
                 <label>密码</label>
-                <input type="password" name="password" required placeholder="password">
+                <input type="password" name="password" required>
 
                 <button type="submit">登录系统</button>
             </form>
-
-            <!-- 生产环境已移除测试账号提示 -->
         </div>
     </div>
 </body>
