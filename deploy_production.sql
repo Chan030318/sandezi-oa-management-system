@@ -13,6 +13,7 @@ CREATE DATABASE IF NOT EXISTS sandezi_oa_plus
 USE sandezi_oa_plus;
 
 SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS device_maintenance;
 DROP TABLE IF EXISTS device_borrows;
 DROP TABLE IF EXISTS devices;
 DROP TABLE IF EXISTS login_logs;
@@ -172,6 +173,26 @@ CREATE TABLE device_borrows (
     INDEX idx_db_device (device_id),
     INDEX idx_db_emp    (employee_id),
     INDEX idx_db_status (status)
+);
+
+-- 设备维修记录
+CREATE TABLE device_maintenance (
+    id                INT AUTO_INCREMENT PRIMARY KEY,
+    device_id         INT NOT NULL,
+    report_by         INT NULL                COMMENT '报修员工 employee_id',
+    issue_title       VARCHAR(200) NOT NULL,
+    issue_description TEXT,
+    status            ENUM('待处理','维修中','已完成','已报废') NOT NULL DEFAULT '待处理',
+    cost              DECIMAL(10,2) NULL      COMMENT '维修费用',
+    handled_by        INT NULL                COMMENT '处理人 user_id',
+    handled_at        DATETIME NULL,
+    note              VARCHAR(1000) NULL,
+    created_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (device_id)  REFERENCES devices(id)   ON DELETE CASCADE,
+    FOREIGN KEY (report_by)  REFERENCES employees(id) ON DELETE SET NULL,
+    FOREIGN KEY (handled_by) REFERENCES users(id)     ON DELETE SET NULL,
+    INDEX idx_dm_device (device_id),
+    INDEX idx_dm_status (status)
 );
 
 -- ============================================================
