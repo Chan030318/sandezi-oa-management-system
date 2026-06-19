@@ -93,14 +93,14 @@ $total_pages = max(1, (int)ceil($total_rows / $per_page));
 $page        = min($page, $total_pages);
 $offset      = ($page - 1) * $per_page;
 
-$params_paged = array_merge($params, [$per_page, $offset]);
+$params_paged = array_merge($params, [$offset, $per_page]);
 $emp_stmt = $pdo->prepare("
     SELECT e.*, d.name AS department_name
     FROM employees e
     LEFT JOIN departments d ON e.department_id = d.id
     $where_sql
     ORDER BY e.id DESC
-    LIMIT ? OFFSET ?
+    LIMIT ?, ?
 ");
 $emp_stmt->execute($params_paged);
 $employees = $emp_stmt->fetchAll();

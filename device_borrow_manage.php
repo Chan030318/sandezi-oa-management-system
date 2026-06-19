@@ -157,9 +157,9 @@ $stmt = $pdo->prepare("
     ORDER BY
         FIELD(b.status,'待审批','已批准','已拒绝','已归还'),
         b.id DESC
-    LIMIT ? OFFSET ?
+    LIMIT ?, ?
 ");
-$stmt->execute(array_merge($params, [$per_page, $offset]));
+$stmt->execute(array_merge($params, [$offset, $per_page]));
 $borrows = $stmt->fetchAll();
 
 $status_colors = [

@@ -57,9 +57,9 @@ $list_stmt = $pdo->prepare("
     LEFT JOIN users u ON a.user_id = u.id
     $where_sql
     ORDER BY a.id DESC
-    LIMIT ? OFFSET ?
+    LIMIT ?, ?
 ");
-$list_stmt->execute(array_merge($params, [$per_page, $offset]));
+$list_stmt->execute(array_merge($params, [$offset, $per_page]));
 $logs = $list_stmt->fetchAll();
 
 // 下拉筛选用：所有 module 和 action 枚举
