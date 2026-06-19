@@ -57,8 +57,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$new_password) {
             // 空白则跳过（不改密码）
             $message = '密码未填写，保持不变';
-        } elseif (strlen($new_password) < 6) {
-            $error = '密码至少 6 位';
+        } elseif (strlen($new_password) < 8) {
+            $error = '密码至少 8 位';
         } elseif ($new_password !== $confirm) {
             $error = '两次密码不一致';
         } else {

@@ -28,6 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $hash = password_hash($new_password, PASSWORD_DEFAULT);
         $upd  = $pdo->prepare("UPDATE users SET password_hash = ? WHERE id = ?");
         $upd->execute([$hash, $user_id]);
+        write_audit_log('用户管理', '修改密码', "用户 ID {$user_id} 自助修改密码");
         $message = '密码已成功修改，请妥善保管新密码。';
     }
 }

@@ -10,19 +10,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add')
     verify_csrf();
     $sch_emp_id  = intval($_POST['employee_id']);
     $sch_shf_id  = intval($_POST['shift_id']);
-    $sch_date    = $_POST['work_date'];
+    $sch_date    = trim($_POST['work_date'] ?? '');
     $sch_remark  = trim($_POST['remark'] ?? '');
-    $stmt = $pdo->prepare("
-        INSERT INTO schedules (employee_id, shift_id, work_date, remark)
-        VALUES (?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE
-            shift_id   = VALUES(shift_id),
-            remark     = VALUES(remark),
-            created_at = CURRENT_TIMESTAMP
-    ");
-    $stmt->execute([$sch_emp_id, $sch_shf_id, $sch_date, $sch_remark]);
-    write_audit_log('排班管理', '新增排班', "员工 ID {$sch_emp_id} 排班日期：{$sch_date}");
-    $message = '排班新增成功';
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $sch_date)) {
+        $message     = '日期格式无效，请选择正确的日期。';
+        $messageType = 'error';
+    } else {
+        $stmt = $pdo->prepare("
+            INSERT INTO schedules (employee_id, shift_id, work_date, remark)
+            VALUES (?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE
+                shift_id   = VALUES(shift_id),
+                remark     = VALUES(remark),
+                created_at = CURRENT_TIMESTAMP
+        ");
+        $stmt->execute([$sch_emp_id, $sch_shf_id, $sch_date, $sch_remark]);
+        write_audit_log('排班管理', '新增排班', "员工 ID {$sch_emp_id} 排班日期：{$sch_date}");
+        $message = '排班新增成功';
+    }
 }
 
 // 编辑排班
@@ -31,16 +36,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'edit'
     $sch_id      = intval($_POST['id']);
     $sch_emp_id  = intval($_POST['employee_id']);
     $sch_shf_id  = intval($_POST['shift_id']);
-    $sch_date    = $_POST['work_date'];
+    $sch_date    = trim($_POST['work_date'] ?? '');
     $sch_remark  = trim($_POST['remark'] ?? '');
-    $stmt = $pdo->prepare("
-        UPDATE schedules
-        SET employee_id = ?, shift_id = ?, work_date = ?, remark = ?
-        WHERE id = ?
-    ");
-    $stmt->execute([$sch_emp_id, $sch_shf_id, $sch_date, $sch_remark, $sch_id]);
-    write_audit_log('排班管理', '编辑排班', "排班 ID {$sch_id}：员工 ID {$sch_emp_id}，日期 {$sch_date}");
-    $message = '排班已更新';
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $sch_date)) {
+        $message     = '日期格式无效，请选择正确的日期。';
+        $messageType = 'error';
+    } else {
+        $stmt = $pdo->prepare("
+            UPDATE schedules
+            SET employee_id = ?, shift_id = ?, work_date = ?, remark = ?
+            WHERE id = ?
+        ");
+        $stmt->execute([$sch_emp_id, $sch_shf_id, $sch_date, $sch_remark, $sch_id]);
+        write_audit_log('排班管理', '编辑排班', "排班 ID {$sch_id}：员工 ID {$sch_emp_id}，日期 {$sch_date}");
+        $message = '排班已更新';
+    }
 }
 
 // 删除排班（POST）

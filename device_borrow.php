@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'apply
                         (device_id, employee_id, purpose, borrow_start, borrow_end, status)
                     VALUES (?, ?, ?, ?, ?, '待审批')
                 ")->execute([$device_id, $emp_id, $purpose, $borrow_start, $borrow_end]);
-
+                write_audit_log('设备借用', '提交借用申请', "设备 ID {$device_id}（{$device['name']}）{$borrow_start}~{$borrow_end}：{$purpose}");
                 $message = '借用申请已提交，请等待审批。';
             }
         }
@@ -74,6 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'cance
     $chk->execute([$borrow_id, $emp_id]);
     if ($chk->fetch()) {
         $pdo->prepare("DELETE FROM device_borrows WHERE id = ?")->execute([$borrow_id]);
+        write_audit_log('设备借用', '撤销借用申请', "撤销借用申请 ID {$borrow_id}");
         $message = '申请已撤销。';
     } else {
         $error = '无法撤销该申请（仅可撤销自己的待审批申请）。';

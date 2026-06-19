@@ -38,6 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 VALUES (?, ?, ?, ?, ?)
             ");
             $stmt->execute([$employeeId, $leave_type, $start_date, $end_date, $reason]);
+            write_audit_log('请假申请', '提交请假', "员工 ID {$employeeId} 申请 {$leave_type} {$start_date}~{$end_date}");
             $message = 'success:请假申请提交成功，请等待主管审批。';
         }
     }

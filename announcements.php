@@ -15,6 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add')
     } else {
         $pdo->prepare("INSERT INTO announcements (title, content, created_by) VALUES (?, ?, ?)")
             ->execute([$title, $content, $user['id']]);
+        write_audit_log('公告管理', '新增公告', "新增公告：{$title}");
         header("Location: announcements.php");
         exit;
     }
@@ -32,6 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'edit'
     } else {
         $pdo->prepare("UPDATE announcements SET title = ?, content = ? WHERE id = ?")
             ->execute([$title, $content, $id]);
+        write_audit_log('公告管理', '编辑公告', "编辑公告 ID {$id}：{$title}");
         header("Location: announcements.php");
         exit;
     }
@@ -43,7 +45,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delet
     verify_csrf();
     $id = intval($_POST['id'] ?? 0);
     if ($id > 0) {
+        $del_row = $pdo->prepare("SELECT title FROM announcements WHERE id = ?");
+        $del_row->execute([$id]);
+        $del_title = $del_row->fetchColumn() ?: "ID {$id}";
         $pdo->prepare("DELETE FROM announcements WHERE id = ?")->execute([$id]);
+        write_audit_log('公告管理', '删除公告', "删除公告 ID {$id}：{$del_title}");
     }
     header("Location: announcements.php");
     exit;
