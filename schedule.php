@@ -8,6 +8,10 @@ $messageType  = 'success';
 // 新增排班
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add') {
     verify_csrf();
+    $sch_emp_id  = intval($_POST['employee_id']);
+    $sch_shf_id  = intval($_POST['shift_id']);
+    $sch_date    = $_POST['work_date'];
+    $sch_remark  = trim($_POST['remark'] ?? '');
     $stmt = $pdo->prepare("
         INSERT INTO schedules (employee_id, shift_id, work_date, remark)
         VALUES (?, ?, ?, ?)
@@ -16,37 +20,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add')
             remark     = VALUES(remark),
             created_at = CURRENT_TIMESTAMP
     ");
-    $stmt->execute([
-        intval($_POST['employee_id']),
-        intval($_POST['shift_id']),
-        $_POST['work_date'],
-        trim($_POST['remark'] ?? '')
-    ]);
+    $stmt->execute([$sch_emp_id, $sch_shf_id, $sch_date, $sch_remark]);
+    write_audit_log('排班管理', '新增排班', "员工 ID {$sch_emp_id} 排班日期：{$sch_date}");
     $message = '排班新增成功';
 }
 
 // 编辑排班
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'edit') {
     verify_csrf();
+    $sch_id      = intval($_POST['id']);
+    $sch_emp_id  = intval($_POST['employee_id']);
+    $sch_shf_id  = intval($_POST['shift_id']);
+    $sch_date    = $_POST['work_date'];
+    $sch_remark  = trim($_POST['remark'] ?? '');
     $stmt = $pdo->prepare("
         UPDATE schedules
         SET employee_id = ?, shift_id = ?, work_date = ?, remark = ?
         WHERE id = ?
     ");
-    $stmt->execute([
-        intval($_POST['employee_id']),
-        intval($_POST['shift_id']),
-        $_POST['work_date'],
-        trim($_POST['remark'] ?? ''),
-        intval($_POST['id'])
-    ]);
+    $stmt->execute([$sch_emp_id, $sch_shf_id, $sch_date, $sch_remark, $sch_id]);
+    write_audit_log('排班管理', '编辑排班', "排班 ID {$sch_id}：员工 ID {$sch_emp_id}，日期 {$sch_date}");
     $message = '排班已更新';
 }
 
 // 删除排班（POST）
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete') {
     verify_csrf();
-    $pdo->prepare("DELETE FROM schedules WHERE id = ?")->execute([intval($_POST['id'])]);
+    $sch_id = intval($_POST['id']);
+    $del_row = $pdo->prepare("SELECT s.work_date, e.name FROM schedules s LEFT JOIN employees e ON s.employee_id=e.id WHERE s.id=?");
+    $del_row->execute([$sch_id]);
+    $del_info = $del_row->fetch();
+    $pdo->prepare("DELETE FROM schedules WHERE id = ?")->execute([$sch_id]);
+    $del_desc = $del_info ? "员工：{$del_info['name']}，日期：{$del_info['work_date']}" : "ID {$sch_id}";
+    write_audit_log('排班管理', '删除排班', "删除排班：{$del_desc}");
     $message = '排班已删除';
     $messageType = 'success';
 }

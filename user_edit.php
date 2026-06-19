@@ -65,6 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $hash = password_hash($new_password, PASSWORD_DEFAULT);
             $upd  = $pdo->prepare("UPDATE users SET password_hash = ? WHERE id = ?");
             $upd->execute([$hash, $id]);
+            write_audit_log('用户管理', '重设密码', "重设用户密码：{$target['name']}（ID {$id}）");
             $message = '密码已重设';
         }
     }

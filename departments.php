@@ -16,7 +16,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($stmt->fetch()['total'] > 0) {
             $error = '该部门已有员工，不能删除。';
         } else {
+            $del_row = $pdo->prepare("SELECT name FROM departments WHERE id = ?");
+            $del_row->execute([$id]);
+            $del_name = $del_row->fetchColumn() ?: "ID {$id}";
             $pdo->prepare("DELETE FROM departments WHERE id = ?")->execute([$id]);
+            write_audit_log('部门管理', '删除部门', "删除部门：{$del_name}（ID {$id}）");
             header("Location: departments.php");
             exit;
         }
@@ -30,12 +34,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = '部门名称不能为空。';
         } else {
             if (!empty($_POST['id'])) {
+                $dept_id = intval($_POST['id']);
                 $stmt = $pdo->prepare("UPDATE departments SET name = ?, description = ? WHERE id = ?");
-                $stmt->execute([$name, $description, intval($_POST['id'])]);
+                $stmt->execute([$name, $description, $dept_id]);
+                write_audit_log('部门管理', '编辑部门', "编辑部门：{$name}（ID {$dept_id}）");
                 $message = '部门资料已更新';
             } else {
                 $stmt = $pdo->prepare("INSERT INTO departments (name, description) VALUES (?, ?)");
                 $stmt->execute([$name, $description]);
+                write_audit_log('部门管理', '新增部门', "新增部门：{$name}");
                 $message = '部门新增成功';
             }
             header("Location: departments.php");

@@ -53,4 +53,19 @@ function verify_csrf() {
         die('无效的请求，请刷新页面后重试。');
     }
 }
+
+function write_audit_log($module, $action, $description) {
+    global $pdo;
+    $user    = current_user();
+    $user_id = $user ? intval($user['id']) : null;
+    $ip      = $_SERVER['REMOTE_ADDR'] ?? '';
+    try {
+        $pdo->prepare("
+            INSERT INTO audit_logs (user_id, module, action, description, ip_address)
+            VALUES (?, ?, ?, ?, ?)
+        ")->execute([$user_id, $module, $action, $description, $ip]);
+    } catch (Exception $e) {
+        error_log('audit_log error: ' . $e->getMessage());
+    }
+}
 ?>

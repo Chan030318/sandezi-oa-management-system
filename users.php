@@ -38,6 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add')
                 VALUES (?, ?, ?, ?, ?, ?)
             ");
             $stmt->execute([$employee_id, $name, $email, $hash, $role, $status]);
+            write_audit_log('用户管理', '新增用户', "新增用户：{$name}（{$email}，角色：{$role}）");
             $message = '用户新增成功';
         }
     }
@@ -57,6 +58,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'toggl
         $new_status = ($current_status === 'active') ? 'inactive' : 'active';
         $upd = $pdo->prepare("UPDATE users SET status = ? WHERE id = ?");
         $upd->execute([$new_status, $target_id]);
+        $log_action = $new_status === 'active' ? '启用用户' : '停用用户';
+        write_audit_log('用户管理', $log_action, "{$log_action}：用户 ID {$target_id}");
         $message = $new_status === 'active' ? '用户已启用' : '用户已停用';
     }
 }

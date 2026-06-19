@@ -46,6 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'appro
                     ->execute([$borrow['device_id']]);
 
                 $pdo->commit();
+                write_audit_log('设备借用', '批准借用', "批准借用申请 ID {$borrow_id}：{$borrow['device_id']} 号设备");
                 $message = '已批准借用申请，设备状态已更新为「使用中」。';
             } catch (Exception $e) {
                 $pdo->rollBack();
@@ -70,6 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'rejec
             SET status = '已拒绝', approved_by = ?, approved_at = NOW()
             WHERE id = ?
         ")->execute([$me['id'], $borrow_id]);
+        write_audit_log('设备借用', '拒绝借用', "拒绝借用申请 ID {$borrow_id}");
         $message = '已拒绝该借用申请。';
     }
 }
@@ -99,6 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'retur
                 ->execute([$borrow['device_id']]);
 
             $pdo->commit();
+            write_audit_log('设备借用', '登记归还', "设备 ID {$borrow['device_id']} 借用 ID {$borrow_id} 已归还");
             $message = '设备已登记归还，状态已更新为「空闲」。';
         } catch (Exception $e) {
             $pdo->rollBack();

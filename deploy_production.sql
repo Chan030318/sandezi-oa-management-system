@@ -13,6 +13,7 @@ CREATE DATABASE IF NOT EXISTS sandezi_oa_plus
 USE sandezi_oa_plus;
 
 SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS audit_logs;
 DROP TABLE IF EXISTS device_maintenance;
 DROP TABLE IF EXISTS device_borrows;
 DROP TABLE IF EXISTS devices;
@@ -119,6 +120,23 @@ CREATE TABLE login_logs (
     INDEX idx_ll_ip      (ip),
     INDEX idx_ll_status  (status),
     INDEX idx_ll_created (created_at)
+);
+
+-- ── 操作审计日志 ──────────────────────────────────────────────
+
+CREATE TABLE audit_logs (
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    user_id     INT NULL,
+    module      VARCHAR(50)  NOT NULL,
+    action      VARCHAR(50)  NOT NULL,
+    description TEXT,
+    ip_address  VARCHAR(45),
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_al_user    (user_id),
+    INDEX idx_al_module  (module),
+    INDEX idx_al_action  (action),
+    INDEX idx_al_created (created_at)
 );
 
 -- ── 公告 ──────────────────────────────────────────────────────

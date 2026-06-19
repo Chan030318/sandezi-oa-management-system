@@ -24,6 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add')
             INSERT INTO employees (name, department_id, position, phone, email, status)
             VALUES (?, ?, ?, ?, ?, ?)
         ")->execute([$name, $department_id ?: null, $position, $phone, $email, $status]);
+        write_audit_log('员工管理', '新增员工', "新增员工：{$name}（岗位：{$position}）");
         $message = '员工新增成功';
     }
 }
@@ -47,6 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'edit'
             SET name = ?, department_id = ?, position = ?, phone = ?, email = ?, status = ?
             WHERE id = ?
         ")->execute([$name, $department_id ?: null, $position, $phone, $email, $status, $id]);
+        write_audit_log('员工管理', '编辑员工', "编辑员工 ID {$id}：{$name}（岗位：{$position}）");
         $message = '员工资料已更新';
     }
 }
@@ -54,7 +56,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'edit'
 // 删除员工
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete') {
     verify_csrf();
-    $pdo->prepare("DELETE FROM employees WHERE id = ?")->execute([intval($_POST['id'])]);
+    $del_id = intval($_POST['id']);
+    $del_row = $pdo->prepare("SELECT name FROM employees WHERE id = ?");
+    $del_row->execute([$del_id]);
+    $del_name = $del_row->fetchColumn() ?: "ID {$del_id}";
+    $pdo->prepare("DELETE FROM employees WHERE id = ?")->execute([$del_id]);
+    write_audit_log('员工管理', '删除员工', "删除员工：{$del_name}（ID {$del_id}）");
     $message = '员工已删除';
 }
 

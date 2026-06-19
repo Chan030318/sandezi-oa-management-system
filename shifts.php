@@ -18,7 +18,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($stmt->fetch()['total'] > 0) {
             $error = '此班次已有排班记录在使用，无法删除。请先删除相关排班后再试。';
         } else {
+            $del_row = $pdo->prepare("SELECT name FROM shifts WHERE id = ?");
+            $del_row->execute([$id]);
+            $del_name = $del_row->fetchColumn() ?: "ID {$id}";
             $pdo->prepare("DELETE FROM shifts WHERE id = ?")->execute([$id]);
+            write_audit_log('班次管理', '删除班次', "删除班次：{$del_name}（ID {$id}）");
             header("Location: shifts.php");
             exit;
         }
@@ -34,12 +38,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = '班次名称、开始时间和结束时间为必填项。';
         } else {
             if (!empty($_POST['id'])) {
+                $shift_id = intval($_POST['id']);
                 $stmt = $pdo->prepare("UPDATE shifts SET name=?, start_time=?, end_time=?, description=? WHERE id=?");
-                $stmt->execute([$name, $start_time, $end_time, $description, intval($_POST['id'])]);
+                $stmt->execute([$name, $start_time, $end_time, $description, $shift_id]);
+                write_audit_log('班次管理', '编辑班次', "编辑班次：{$name}（{$start_time}-{$end_time}）");
                 $message = '班次资料已更新';
             } else {
                 $stmt = $pdo->prepare("INSERT INTO shifts (name, start_time, end_time, description) VALUES (?, ?, ?, ?)");
                 $stmt->execute([$name, $start_time, $end_time, $description]);
+                write_audit_log('班次管理', '新增班次', "新增班次：{$name}（{$start_time}-{$end_time}）");
                 $message = '班次新增成功';
             }
             header("Location: shifts.php");

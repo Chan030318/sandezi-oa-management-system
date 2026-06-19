@@ -46,6 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $can_manage) {
                 $category, $brand, $model, $serial_number ?: null,
                 $department_id, $manager, $status_val
             ]);
+            write_audit_log('设备管理', '新增设备', "新增设备：{$name}（编号：" . ($device_code ?: '—') . "）");
             $message = '设备已新增。';
         }
     }
@@ -89,6 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $can_manage) {
                 $category, $brand, $model, $serial_number ?: null,
                 $department_id, $manager, $status_val, $id
             ]);
+            write_audit_log('设备管理', '编辑设备', "编辑设备 ID {$id}：{$name}（状态：{$status_val}）");
             $message = '设备资料已更新。';
         }
     }
@@ -98,7 +100,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $can_manage) {
         verify_csrf();
         $id = intval($_POST['id'] ?? 0);
         if ($id > 0) {
+            $del_row = $pdo->prepare("SELECT name, device_code FROM devices WHERE id = ?");
+            $del_row->execute([$id]);
+            $del_dv = $del_row->fetch();
             $pdo->prepare("DELETE FROM devices WHERE id = ?")->execute([$id]);
+            $del_desc = $del_dv ? "{$del_dv['name']}（编号：" . ($del_dv['device_code'] ?: '—') . "）" : "ID {$id}";
+            write_audit_log('设备管理', '删除设备', "删除设备：{$del_desc}");
             $message = '设备已删除。';
         }
     }

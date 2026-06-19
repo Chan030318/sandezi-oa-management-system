@@ -75,6 +75,17 @@ function timeText($time){
     if (!$time) return '-';
     return substr($time, 0, 5);
 }
+
+$recentAuditLogs = [];
+if (has_role(['Admin'])) {
+    $recentAuditLogs = $pdo->query("
+        SELECT a.module, a.action, a.description, a.created_at, u.name AS user_name
+        FROM audit_logs a
+        LEFT JOIN users u ON a.user_id = u.id
+        ORDER BY a.id DESC
+        LIMIT 10
+    ")->fetchAll();
+}
 ?>
 
 <div class="page-title">
@@ -213,5 +224,32 @@ function timeText($time){
         </ul>
     <?php endif; ?>
 </section>
+
+<?php if (has_role(['Admin']) && !empty($recentAuditLogs)): ?>
+<section class="panel">
+    <div class="panel-head">
+        <h2>系统操作记录</h2>
+        <a href="audit_logs.php">查看全部</a>
+    </div>
+    <table>
+        <tr>
+            <th>时间</th>
+            <th>操作人</th>
+            <th>模块</th>
+            <th>动作</th>
+            <th>说明</th>
+        </tr>
+        <?php foreach ($recentAuditLogs as $al): ?>
+        <tr>
+            <td style="white-space:nowrap;font-size:12px;color:#888;"><?= safe(substr($al['created_at'], 0, 16)) ?></td>
+            <td><?= safe($al['user_name'] ?? '—') ?></td>
+            <td><span class="badge"><?= safe($al['module']) ?></span></td>
+            <td><?= safe($al['action']) ?></td>
+            <td style="font-size:13px;color:#555;"><?= safe($al['description']) ?></td>
+        </tr>
+        <?php endforeach; ?>
+    </table>
+</section>
+<?php endif; ?>
 
 <?php require_once __DIR__ . '/footer.php'; ?>

@@ -8,13 +8,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     verify_csrf();
     $leaveId = intval($_POST['leave_id'] ?? 0);
     if ($leaveId) {
+        $lv_row = $pdo->prepare("SELECT l.leave_type, l.start_date, l.end_date, e.name FROM leaves l LEFT JOIN employees e ON l.employee_id=e.id WHERE l.id=?");
+        $lv_row->execute([$leaveId]);
+        $lv_info = $lv_row->fetch();
+        $lv_desc = $lv_info ? "{$lv_info['name']} {$lv_info['leave_type']} {$lv_info['start_date']}~{$lv_info['end_date']}" : "ID {$leaveId}";
+
         if ($_POST['action'] === 'approve') {
             $stmt = $pdo->prepare("UPDATE leaves SET status = 'Approved', approve_remark = '已批准' WHERE id = ?");
             $stmt->execute([$leaveId]);
+            write_audit_log('请假审批', '批准请假', "批准请假：{$lv_desc}");
             $message = '请假申请已批准';
         } elseif ($_POST['action'] === 'reject') {
             $stmt = $pdo->prepare("UPDATE leaves SET status = 'Rejected', approve_remark = '已拒绝' WHERE id = ?");
             $stmt->execute([$leaveId]);
+            write_audit_log('请假审批', '拒绝请假', "拒绝请假：{$lv_desc}");
             $message = '请假申请已拒绝';
         }
     }

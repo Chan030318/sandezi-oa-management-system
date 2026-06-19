@@ -87,6 +87,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
                 }
 
                 $pdo->commit();
+                $log_action = $new_status === '已报废' ? '标记报废' : '更新维修状态';
+                write_audit_log('设备维修', $log_action, "维修记录 ID {$maint_id}（设备 ID {$maint['device_id']}）状态更新为：{$new_status}");
                 $message = '维修状态已更新。';
             } catch (Exception $e) {
                 $pdo->rollBack();
