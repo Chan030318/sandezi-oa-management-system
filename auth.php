@@ -1,4 +1,12 @@
 <?php
+// Session cookie hardening — Secure only over HTTPS to keep HTTP dev working
+$is_https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+            || (($_SERVER['SERVER_PORT'] ?? 80) == 443);
+session_set_cookie_params([
+    'httponly' => true,
+    'samesite' => 'Lax',
+    'secure'   => $is_https,
+]);
 session_start();
 require_once __DIR__ . '/db.php';
 
