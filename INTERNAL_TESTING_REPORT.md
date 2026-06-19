@@ -1,16 +1,16 @@
 # 三德子 OA 系统 — 内部上线测试说明
 
-**文件版本：** v3.0（Phase 4 场地管理模块更新）  
+**文件版本：** v3.1（安全加固 + 内部试用包）  
 **生成日期：** 2026-06-19  
-**系统版本 Commit：** `b747e05`  
+**系统版本 Commit：** `34764fd`  
 **准备人：** 开发团队  
 **用途：** 内部测试负责人 / 管理层阅读
 
 ---
 
-## ⚠️ 重要声明
+## ✅ 系统状态：Ready for Internal Testing
 
-> 本文件描述的系统已完成「**基础 OA 系统（Phase 1+2）**」「**设备管理模块（Phase 3）**」与「**场地管理模块（Phase 4）**」。  
+> 本系统已完成「**基础 OA 系统（Phase 1+2）**」「**设备管理模块（Phase 3）**」「**场地管理模块（Phase 4）**」与「**安全加固（登录防护 + 审计日志补全）**」。  
 > **主播运营数据系统仍属于后续开发阶段，当前版本不包含。**  
 > 请勿以此版本作为全部需求完成的验收标准。
 
@@ -22,14 +22,15 @@
 |---|---|
 | 内部测试就绪 | ✅ 是 |
 | 可供内部员工试用 | ✅ 是 |
-| 安全加固完成 | ✅ 是 |
-| 操作审计日志 | ✅ 是（Phase 3.4） |
-| 设备管理模块完成 | ✅ 是（Phase 3.0～3.3） |
-| 场地管理模块完成 | ✅ 是（Phase 4.0～4.2） |
-| 对外公开上线 | ⚠️ 需先完成 HTTPS 配置 |
-| 全部需求开发完成 | ❌ 否（主播运营系统待开发） |
+| 安全加固完成 | ✅ 是（含登录 CSRF + 速率限制 + Cookie 安全）|
+| 操作审计日志 | ✅ 是（全模块覆盖，Phase 3.4 + 补全修复）|
+| 设备管理模块完成 | ✅ 是（Phase 3.0～3.3）|
+| 场地管理模块完成 | ✅ 是（Phase 4.0～4.2）|
+| 试用包准备完成 | ✅ 是（TEST_ACCOUNTS / USER_TESTING_CHECKLIST / DEPLOYMENT_CHECKLIST）|
+| 对外公开上线 | ⚠️ 需先完成 HTTPS 配置 + 默认密码修改 |
+| 全部需求开发完成 | ❌ 否（主播运营系统待开发）|
 
-**结论：当前版本适合内部全面测试，包含完整 HR 功能、设备管理与场地管理。不代表整体项目完成。**
+**结论：当前版本已通过全模块回归测试，适合内部全面试用，包含完整 HR 功能、设备管理、场地管理与安全加固。不代表整体项目完成。**
 
 ---
 
@@ -206,12 +207,20 @@
 | Transaction 保障数据一致性 | ✅ 借用/维修/预约操作 |
 | 时间冲突检测防重叠预约 | ✅ 完成 |
 | 状态白名单校验（报表筛选） | ✅ 完成 |
-| 操作审计日志全覆盖 | ✅ 完成 |
+| 操作审计日志全覆盖 | ✅ 完成（含公告/密码/请假申请/借用申请）|
+| 登录 CSRF Token | ✅ 完成（`hash_equals` 防 timing attack）|
+| 登录速率限制 | ✅ 完成（5 次失败锁定 10 分钟）|
+| Session Cookie HttpOnly | ✅ 完成 |
+| Session Cookie SameSite=Lax | ✅ 完成 |
+| Session Cookie Secure（HTTPS 自动）| ✅ 完成（HTTP 开发不受影响）|
+| 排班日期格式验证 | ✅ 完成（非法日期拒绝执行 SQL）|
 | .gitignore 排除配置文件 | ✅ 完成 |
 
-**上线前仍需补充：**
-- ⚠️ Session Cookie 加 `HttpOnly + Secure + SameSite=Lax`（需 HTTPS 环境）
-- ⚠️ 登录失败速率限制（暴力破解防护）
+**上线前仍需完成（基础设施层，不在 PHP 代码内）：**
+- ⚠️ 配置 HTTPS / SSL 证书（Let's Encrypt 免费）
+- ⚠️ 修改 Admin 初始默认密码
+- ⚠️ 配置 MySQL 每日自动备份
+- ⚠️ 设置 `display_errors = Off`（生产环境 php.ini）
 
 ---
 
@@ -383,24 +392,26 @@ Phase 5：主播运营数据系统（绩效、直播数据分析）             
 | 项目 | 判断 |
 |---|---|
 | HR 功能（排班/请假/公告）是否完整 | ✅ 完整 |
-| 设备管理功能是否完整 | ✅ 完整（MVP 级别） |
-| 场地管理功能是否完整 | ✅ 完整（MVP 级别） |
-| 操作审计是否完整 | ✅ 完整 |
-| 安全性是否达到内部系统标准 | ✅ 是（需上线前加 HTTPS） |
+| 设备管理功能是否完整 | ✅ 完整（MVP 级别）|
+| 场地管理功能是否完整 | ✅ 完整（MVP 级别）|
+| 操作审计是否完整 | ✅ 完整（全模块覆盖）|
+| 登录安全（CSRF / 速率限制 / Cookie）| ✅ 完整 |
+| 安全性是否达到内部系统标准 | ✅ 是（代码层完整；HTTPS 为基础设施配置）|
 | 是否可以替代纸质排班/请假/设备借用/场地预约流程 | ✅ 可以 |
 | 是否涵盖所有最终业务需求 | ❌ 否，主播运营系统待开发 |
-| 是否可以正式对外使用 | ⚠️ 内部测试通过后视情况决定 |
+| 是否可以正式对外使用 | ⚠️ 配置 HTTPS + 修改默认密码后可部署 |
 
 ---
 
 ## 十二、下一阶段建议
 
-**上线前必做：**
+**上线前必做（基础设施层）：**
 1. 配置生产服务器 HTTPS（Let's Encrypt 免费证书）
-2. 修改初始 Admin 密码
-3. 配置 MySQL 每日自动备份
-4. Session Cookie 加 `Secure; HttpOnly; SameSite=Lax`
-5. 实现登录失败速率限制
+2. 修改初始 Admin 密码（`SdzAdmin2026!` → 强密码）
+3. 配置 MySQL 每日自动备份（详见 `DEPLOYMENT_CHECKLIST.md`）
+4. 生产 php.ini 设置 `display_errors = Off`
+
+> ✅ Session Cookie 安全标头（HttpOnly / SameSite / Secure）、登录 CSRF、登录速率限制已在代码层完成，无需额外配置。
 
 **测试期间同步：**
 1. 录入现有场地台账数据（场地名称、类型、容量）
@@ -414,15 +425,26 @@ Phase 5：主播运营数据系统（绩效、直播数据分析）             
 
 ---
 
-## 附：Phase 4 Commit 记录
+## 附：完整 Commit 记录
 
-| Phase | Commit | 说明 |
-|---|---|---|
-| 4.0 场地管理 MVP | `94e6819` | feat: add venue management module |
-| 4.1 场地预约系统 | `a2be71c` | feat: add venue booking management system |
-| 4.2 场地报表导出 | `b747e05` | feat: add venue reports export |
+| Commit | 说明 |
+|---|---|
+| `94e6819` | feat: add venue management module（Phase 4.0）|
+| `a2be71c` | feat: add venue booking management system（Phase 4.1）|
+| `b747e05` | feat: add venue reports export（Phase 4.2）|
+| `d037e60` | docs: update internal testing report v3.0 |
+| `6acc5b2` | fix: patch audit log coverage and validation issues (B1-B6) |
+| `34764fd` | fix: harden login security with csrf and rate limiting |
+
+## 附：内部试用配套文档
+
+| 文档 | 说明 |
+|---|---|
+| `TEST_ACCOUNTS.md` | 测试账号说明（三角色权限对照）|
+| `USER_TESTING_CHECKLIST.md` | 用户测试清单（~70 项，三角色各自版本）|
+| `DEPLOYMENT_CHECKLIST.md` | 部署检查清单（数据库 / HTTPS / 权限 / 备份）|
 
 ---
 
-*本文件由开发团队生成，v3.0 更新于 2026-06-19（加入 Phase 4 场地管理模块内容）*  
+*本文件由开发团队生成，v3.1 更新于 2026-06-19（安全加固完成，内部试用包就绪）*  
 *如有问题请联系开发负责人。*
