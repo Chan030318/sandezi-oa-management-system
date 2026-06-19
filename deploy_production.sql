@@ -14,6 +14,7 @@ USE sandezi_oa_plus;
 
 SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS audit_logs;
+DROP TABLE IF EXISTS venue_bookings;
 DROP TABLE IF EXISTS venues;
 DROP TABLE IF EXISTS device_maintenance;
 DROP TABLE IF EXISTS device_borrows;
@@ -139,6 +140,27 @@ CREATE TABLE venues (
     created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_venue_status   (status),
     INDEX idx_venue_category (category)
+);
+
+-- ── 场地预约 ──────────────────────────────────────────────────
+
+CREATE TABLE venue_bookings (
+    id           INT AUTO_INCREMENT PRIMARY KEY,
+    venue_id     INT NOT NULL,
+    employee_id  INT NOT NULL,
+    title        VARCHAR(200) NOT NULL,
+    booking_date DATE NOT NULL,
+    start_time   TIME NOT NULL,
+    end_time     TIME NOT NULL,
+    purpose      VARCHAR(300),
+    status       ENUM('待确认','已确认','已取消') NOT NULL DEFAULT '待确认',
+    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (venue_id)    REFERENCES venues(id)    ON DELETE CASCADE,
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+    INDEX idx_vb_venue_date (venue_id, booking_date),
+    INDEX idx_vb_employee   (employee_id),
+    INDEX idx_vb_date       (booking_date),
+    INDEX idx_vb_status     (status)
 );
 
 -- ── 操作审计日志 ──────────────────────────────────────────────

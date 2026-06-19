@@ -76,6 +76,13 @@ function timeText($time){
     return substr($time, 0, 5);
 }
 
+$todayBookings = 0;
+try {
+    $todayBookings = $pdo->query("
+        SELECT COUNT(*) FROM venue_bookings WHERE booking_date = CURDATE() AND status != '已取消'
+    ")->fetchColumn();
+} catch (Exception $e) {}
+
 $recentAuditLogs = [];
 if (has_role(['Admin'])) {
     $recentAuditLogs = $pdo->query("
@@ -146,6 +153,12 @@ if (has_role(['Admin'])) {
     <span>本月请假</span>
     <h3><?= safe($monthLeaves) ?></h3>
     <p>本月请假记录</p>
+</div>
+
+<div class="stat-card">
+    <span>今日场地预约</span>
+    <h3><?= safe($todayBookings) ?></h3>
+    <p>今日有效预约数</p>
 </div>
 </div>
 

@@ -49,6 +49,7 @@ $current = basename($_SERVER['PHP_SELF']);
             <?php endif; ?>
 
             <a class="<?= $current=='venues.php'?'active':'' ?>" href="venues.php">🏢 场地管理</a>
+            <a class="<?= $current=='venue_bookings.php'?'active':'' ?>" href="venue_bookings.php">📅 场地预约</a>
             <a class="<?= $current=='devices.php'?'active':'' ?>" href="devices.php">📦 设备管理</a>
             <a class="<?= $current=='device_borrow.php'?'active':'' ?>" href="device_borrow.php">📤 设备借用</a>
             <?php if (has_role(['Admin', 'Manager'])): ?>
