@@ -1,4 +1,5 @@
 <?php
+ob_start();
 require_once __DIR__ . '/header.php';
 require_role(['Admin', 'Manager']);
 
@@ -30,6 +31,7 @@ if (!in_array($booking_status, $allowed_booking_status, true)) $booking_status =
 // ── CSV 输出辅助 ──────────────────────────────────────────────────
 function output_csv(string $filename, array $headers, array $rows): void
 {
+    ob_end_clean(); // discard buffered HTML before sending CSV headers
     header('Content-Type: text/csv; charset=UTF-8');
     header('Content-Disposition: attachment; filename="' . rawurlencode($filename) . '"');
     header('Cache-Control: no-cache, no-store, must-revalidate');

@@ -1,4 +1,5 @@
 <?php
+ob_start();
 require_once __DIR__ . '/header.php';
 require_role(['Admin', 'Manager']);
 
@@ -60,10 +61,10 @@ if (isset($_GET['edit'])) {
 }
 
 $departments = $pdo->query("
-    SELECT d.*, COUNT(e.id) AS employee_count
+    SELECT d.id, d.name, d.description, d.created_at, COUNT(e.id) AS employee_count
     FROM departments d
     LEFT JOIN employees e ON e.department_id = d.id
-    GROUP BY d.id
+    GROUP BY d.id, d.name, d.description, d.created_at
     ORDER BY d.id ASC
 ")->fetchAll();
 ?>
