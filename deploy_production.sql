@@ -14,6 +14,7 @@ USE sandezi_oa_plus;
 
 SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS audit_logs;
+DROP TABLE IF EXISTS venues;
 DROP TABLE IF EXISTS device_maintenance;
 DROP TABLE IF EXISTS device_borrows;
 DROP TABLE IF EXISTS devices;
@@ -120,6 +121,24 @@ CREATE TABLE login_logs (
     INDEX idx_ll_ip      (ip),
     INDEX idx_ll_status  (status),
     INDEX idx_ll_created (created_at)
+);
+
+-- ── 场地管理 ──────────────────────────────────────────────────
+
+CREATE TABLE venues (
+    id             INT AUTO_INCREMENT PRIMARY KEY,
+    venue_code     VARCHAR(50)  UNIQUE,
+    name           VARCHAR(100) NOT NULL,
+    category       ENUM('直播间','拍摄间','会议室','办公室','外部场地') NOT NULL DEFAULT '直播间',
+    location       VARCHAR(200),
+    capacity       INT UNSIGNED,
+    contact_person VARCHAR(100),
+    contact_phone  VARCHAR(50),
+    status         ENUM('可用','占用','维修中','停用') NOT NULL DEFAULT '可用',
+    description    TEXT,
+    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_venue_status   (status),
+    INDEX idx_venue_category (category)
 );
 
 -- ── 操作审计日志 ──────────────────────────────────────────────
