@@ -36,7 +36,6 @@ $page        = min($page, $total_pages);
 $offset      = ($page - 1) * $per_page;
 
 // 分页数据
-$params_paged   = array_merge($params, [$offset, $per_page]);
 $stmt = $pdo->prepare("
     SELECT l.id, l.email, l.user_id, l.ip, l.user_agent, l.status, l.created_at,
            u.name AS user_name
@@ -44,9 +43,8 @@ $stmt = $pdo->prepare("
     LEFT JOIN users u ON l.user_id = u.id
     $where_sql
     ORDER BY l.id DESC
-    LIMIT ?, ?
-");
-$stmt->execute($params_paged);
+    LIMIT " . intval($offset) . ", " . intval($per_page));
+$stmt->execute($params);
 $logs = $stmt->fetchAll();
 ?>
 

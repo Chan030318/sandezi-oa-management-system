@@ -191,9 +191,8 @@ $list_stmt = $pdo->prepare("
     LEFT JOIN employees e ON b.employee_id = e.id
     $where_sql
     ORDER BY b.booking_date DESC, b.start_time DESC
-    LIMIT ?, ?
-");
-$list_stmt->execute(array_merge($params, [$offset, $per_page]));
+    LIMIT " . intval($offset) . ", " . intval($per_page));
+$list_stmt->execute($params);
 $bookings = $list_stmt->fetchAll();
 
 // 场地下拉（仅可用/占用的场地可预约）

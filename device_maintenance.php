@@ -162,9 +162,8 @@ $list_stmt = $pdo->prepare("
     ORDER BY
         FIELD(m.status,'待处理','维修中','已完成','已报废'),
         m.id DESC
-    LIMIT ?, ?
-");
-$list_stmt->execute(array_merge($params, [$offset, $per_page]));
+    LIMIT " . intval($offset) . ", " . intval($per_page));
+$list_stmt->execute($params);
 $records = $list_stmt->fetchAll();
 
 $status_colors = [

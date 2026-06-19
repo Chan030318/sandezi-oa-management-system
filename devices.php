@@ -153,9 +153,8 @@ $list_stmt = $pdo->prepare("
     LEFT JOIN departments dept ON d.department_id = dept.id
     $where_sql
     ORDER BY d.id DESC
-    LIMIT ?, ?
-");
-$list_stmt->execute(array_merge($params, [$offset, $per_page]));
+    LIMIT " . intval($offset) . ", " . intval($per_page));
+$list_stmt->execute($params);
 $devices = $list_stmt->fetchAll();
 
 // 分类列表（下拉筛选用）

@@ -148,9 +148,8 @@ $list_stmt = $pdo->prepare("
     FROM venues v
     $where_sql
     ORDER BY v.id DESC
-    LIMIT ?, ?
-");
-$list_stmt->execute(array_merge($params, [$offset, $per_page]));
+    LIMIT " . intval($offset) . ", " . intval($per_page));
+$list_stmt->execute($params);
 $venues = $list_stmt->fetchAll();
 
 // 编辑模式
