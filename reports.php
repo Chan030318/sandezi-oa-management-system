@@ -19,6 +19,14 @@ if ($date_from > $date_to) [$date_from, $date_to] = [$date_to, $date_from];
 $allowed_dev_status = ['空闲', '使用中', '维修中', '报废'];
 if (!in_array($dev_status, $allowed_dev_status, true)) $dev_status = '';
 
+$venue_status   = $_GET['venue_status']   ?? '';
+$booking_status = $_GET['booking_status'] ?? '';
+
+$allowed_venue_status   = ['可用', '占用', '维修中', '停用'];
+$allowed_booking_status = ['待确认', '已确认', '已取消'];
+if (!in_array($venue_status,   $allowed_venue_status,   true)) $venue_status   = '';
+if (!in_array($booking_status, $allowed_booking_status, true)) $booking_status = '';
+
 // ── CSV 输出辅助 ──────────────────────────────────────────────────
 function output_csv(string $filename, array $headers, array $rows): void
 {
@@ -262,6 +270,100 @@ if ($type === 'device_maintenance') {
 }
 
 // ════════════════════════════════════════════════════════════════
+// 导出：场地列表
+// ════════════════════════════════════════════════════════════════
+if ($type === 'venues') {
+    $where  = ['v.created_at BETWEEN ? AND ?'];
+    $params = [$date_from . ' 00:00:00', $date_to . ' 23:59:59'];
+
+    if ($venue_status !== '') {
+        $where[]  = 'v.status = ?';
+        $params[] = $venue_status;
+    }
+
+    $stmt = $pdo->prepare("
+        SELECT v.venue_code, v.name, v.category, v.location,
+               v.capacity, v.contact_person, v.contact_phone,
+               v.status, v.created_at
+        FROM venues v
+        WHERE " . implode(' AND ', $where) . "
+        ORDER BY v.id ASC
+    ");
+    $stmt->execute($params);
+    $csv_rows = [];
+    foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
+        $csv_rows[] = [
+            $r['venue_code']     ?? '',
+            $r['name'],
+            $r['category'],
+            $r['location']       ?? '',
+            $r['capacity']       ?? '',
+            $r['contact_person'] ?? '',
+            $r['contact_phone']  ?? '',
+            $r['status'],
+            $r['created_at'],
+        ];
+    }
+    $suffix = $venue_status ? ('_' . $venue_status) : '';
+    output_csv(
+        '场地列表' . $suffix . '_' . $date_from . '_至_' . $date_to . '.csv',
+        ['场地编号', '场地名称', '类型', '位置', '容量', '联系人', '电话', '状态', '创建时间'],
+        $csv_rows
+    );
+}
+
+// ════════════════════════════════════════════════════════════════
+// 导出：场地预约记录
+// ════════════════════════════════════════════════════════════════
+if ($type === 'venue_bookings') {
+    $where  = ['b.booking_date BETWEEN ? AND ?'];
+    $params = [$date_from, $date_to];
+
+    if ($booking_status !== '') {
+        $where[]  = 'b.status = ?';
+        $params[] = $booking_status;
+    }
+
+    $stmt = $pdo->prepare("
+        SELECT b.title, v.name AS venue_name, v.category AS venue_category,
+               e.name AS employee_name,
+               d.name AS department_name,
+               b.booking_date, b.start_time, b.end_time,
+               b.purpose, b.status, b.created_at
+        FROM venue_bookings b
+        JOIN venues       v    ON b.venue_id    = v.id
+        LEFT JOIN employees    e    ON b.employee_id = e.id
+        LEFT JOIN departments  d    ON e.department_id = d.id
+        WHERE " . implode(' AND ', $where) . "
+        ORDER BY b.booking_date ASC, b.start_time ASC
+    ");
+    $stmt->execute($params);
+    $csv_rows = [];
+    foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
+        $csv_rows[] = [
+            $r['title'],
+            $r['venue_name'],
+            $r['venue_category'],
+            $r['employee_name']   ?? '',
+            $r['department_name'] ?? '',
+            $r['booking_date'],
+            substr($r['start_time'], 0, 5),
+            substr($r['end_time'],   0, 5),
+            $r['purpose']  ?? '',
+            $r['status'],
+            $r['created_at'],
+        ];
+    }
+    $suffix = $booking_status ? ('_' . $booking_status) : '';
+    output_csv(
+        '场地预约记录' . $suffix . '_' . $date_from . '_至_' . $date_to . '.csv',
+        ['预约标题', '场地名称', '场地类型', '预约人', '部门',
+         '日期', '开始时间', '结束时间', '用途', '状态', '创建时间'],
+        $csv_rows
+    );
+}
+
+// ════════════════════════════════════════════════════════════════
 // 预览页面
 // ════════════════════════════════════════════════════════════════
 
@@ -293,9 +395,27 @@ $cnt_maint_stmt = $pdo->prepare("SELECT COUNT(*) FROM device_maintenance WHERE "
 $cnt_maint_stmt->execute($maint_params);
 $n_maint = (int)$cnt_maint_stmt->fetchColumn();
 
+// 场地报表预览数
+$venue_where  = ['v.created_at BETWEEN ? AND ?'];
+$venue_params = [$date_from . ' 00:00:00', $date_to . ' 23:59:59'];
+if ($venue_status !== '') { $venue_where[] = 'v.status = ?'; $venue_params[] = $venue_status; }
+$cnt_venues_stmt = $pdo->prepare("SELECT COUNT(*) FROM venues v WHERE " . implode(' AND ', $venue_where));
+$cnt_venues_stmt->execute($venue_params);
+$n_venues = (int)$cnt_venues_stmt->fetchColumn();
+
+$bk_where  = ['b.booking_date BETWEEN ? AND ?'];
+$bk_params = [$date_from, $date_to];
+if ($booking_status !== '') { $bk_where[] = 'b.status = ?'; $bk_params[] = $booking_status; }
+$cnt_bk_stmt = $pdo->prepare("SELECT COUNT(*) FROM venue_bookings b WHERE " . implode(' AND ', $bk_where));
+$cnt_bk_stmt->execute($bk_params);
+$n_venue_bookings = (int)$cnt_bk_stmt->fetchColumn();
+
 // 辅助：生成带参数的导出链接
 function export_url(string $t, string $df, string $dt, string $ds): string {
     return '?' . http_build_query(['type' => $t, 'date_from' => $df, 'date_to' => $dt, 'dev_status' => $ds]);
+}
+function venue_export_url(string $t, string $df, string $dt, string $vs, string $bs): string {
+    return '?' . http_build_query(['type' => $t, 'date_from' => $df, 'date_to' => $dt, 'venue_status' => $vs, 'booking_status' => $bs]);
 }
 ?>
 
@@ -326,11 +446,29 @@ function export_url(string $t, string $df, string $dt, string $ds): string {
             </select>
         </div>
         <div>
+            <label>场地状态筛选</label>
+            <select name="venue_status">
+                <option value="">全部状态</option>
+                <?php foreach (['可用','占用','维修中','停用'] as $s): ?>
+                    <option value="<?= $s ?>" <?= $venue_status===$s?'selected':'' ?>><?= $s ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div>
+            <label>预约状态筛选</label>
+            <select name="booking_status">
+                <option value="">全部状态</option>
+                <?php foreach (['待确认','已确认','已取消'] as $s): ?>
+                    <option value="<?= $s ?>" <?= $booking_status===$s?'selected':'' ?>><?= $s ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div>
             <button class="btn" type="submit">更新预览</button>
         </div>
     </form>
     <p style="margin:10px 0 0;font-size:13px;color:#888;">
-        ⚠ 设备状态筛选仅影响「设备台账」和「设备维修」导出；HR 报表（排班/请假）不受影响。
+        ⚠ 设备状态筛选仅影响「设备台账」和「设备维修」导出；场地/预约状态筛选仅影响「场地报表」导出；HR 报表不受影响。
     </p>
 </section>
 
@@ -432,6 +570,54 @@ function export_url(string $t, string $df, string $dt, string $ds): string {
         <p style="margin:0;font-size:12px;color:#aaa;">设备·问题·状态·费用·处理人·备注</p>
         <?php if ($n_maint > 0): ?>
             <a href="<?= export_url('device_maintenance', $date_from, $date_to, $dev_status) ?>"
+               class="btn" style="text-align:center;text-decoration:none;">⬇ 导出 CSV</a>
+        <?php else: ?>
+            <button class="btn" disabled style="opacity:.45;cursor:not-allowed;">无记录</button>
+        <?php endif; ?>
+    </section>
+</div>
+
+<!-- ── 场地报表 ────────────────────────────────── -->
+<h3 style="margin:28px 0 12px;color:#555;">🏢 场地报表</h3>
+<?php if ($venue_status || $booking_status): ?>
+    <p style="margin:-4px 0 12px;font-size:13px;color:#5c7cfa;">
+        当前筛选：
+        <?php if ($venue_status): ?><strong>场地状态：<?= safe($venue_status) ?></strong> <?php endif; ?>
+        <?php if ($booking_status): ?><strong>预约状态：<?= safe($booking_status) ?></strong><?php endif; ?>
+    </p>
+<?php endif; ?>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;">
+
+    <!-- 场地列表 -->
+    <section class="panel" style="display:flex;flex-direction:column;gap:10px;">
+        <div>
+            <h2 style="margin:0 0 3px;">🏢 场地列表</h2>
+            <p style="margin:0;color:#666;font-size:13px;">录入时间 <?= safe($date_from) ?> 至 <?= safe($date_to) ?></p>
+        </div>
+        <p style="margin:0;font-size:26px;font-weight:bold;color:#5c7cfa;">
+            <?= $n_venues ?> <span style="font-size:13px;font-weight:normal;color:#888;">条</span>
+        </p>
+        <p style="margin:0;font-size:12px;color:#aaa;">场地编号·名称·类型·位置·容量·联系人·状态</p>
+        <?php if ($n_venues > 0): ?>
+            <a href="<?= venue_export_url('venues', $date_from, $date_to, $venue_status, '') ?>"
+               class="btn" style="text-align:center;text-decoration:none;">⬇ 导出 CSV</a>
+        <?php else: ?>
+            <button class="btn" disabled style="opacity:.45;cursor:not-allowed;">无记录</button>
+        <?php endif; ?>
+    </section>
+
+    <!-- 场地预约记录 -->
+    <section class="panel" style="display:flex;flex-direction:column;gap:10px;">
+        <div>
+            <h2 style="margin:0 0 3px;">📅 场地预约记录</h2>
+            <p style="margin:0;color:#666;font-size:13px;">预约日期 <?= safe($date_from) ?> 至 <?= safe($date_to) ?></p>
+        </div>
+        <p style="margin:0;font-size:26px;font-weight:bold;color:#5c7cfa;">
+            <?= $n_venue_bookings ?> <span style="font-size:13px;font-weight:normal;color:#888;">条</span>
+        </p>
+        <p style="margin:0;font-size:12px;color:#aaa;">标题·场地·预约人·部门·日期·时段·用途·状态</p>
+        <?php if ($n_venue_bookings > 0): ?>
+            <a href="<?= venue_export_url('venue_bookings', $date_from, $date_to, '', $booking_status) ?>"
                class="btn" style="text-align:center;text-decoration:none;">⬇ 导出 CSV</a>
         <?php else: ?>
             <button class="btn" disabled style="opacity:.45;cursor:not-allowed;">无记录</button>
