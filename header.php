@@ -36,6 +36,7 @@ $current = basename($_SERVER['PHP_SELF']);
                 <a class="<?= $current=='employees.php'?'active':'' ?>" href="employees.php">👥 员工管理</a>
                 <a class="<?= $current=='departments.php'?'active':'' ?>" href="departments.php">🏢 部门管理</a>
                 <a class="<?= $current=='schedule.php'?'active':'' ?>" href="schedule.php">📅 排班管理</a>
+                <a class="<?= $current=='schedule_batch.php'?'active':'' ?>" href="schedule_batch.php">📋 批量排班</a>
                 <a class="<?= $current=='weekly_schedule.php'?'active':'' ?>" href="weekly_schedule.php">📅 周排班表</a>
                 <a class="<?= $current=='shifts.php'?'active':'' ?>" href="shifts.php">⏰ 班次管理</a>
                 <a class="<?= $current=='leave_manage.php'?'active':'' ?>" href="leave_manage.php">✅ 请假管理</a>
