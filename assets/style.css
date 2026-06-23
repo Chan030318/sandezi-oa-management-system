@@ -229,6 +229,81 @@ button:hover { background: var(--primary-dark); }
 .menu::-webkit-scrollbar-thumb { background: rgba(255,255,255,.3); border-radius: 10px; }
 .menu::-webkit-scrollbar-track { background: transparent; }
 
+/* --- Grouped sidebar nav --- */
+.nav-group { margin-bottom: 2px; }
+
+.sidebar .nav-group-btn {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.42);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.9px;
+    text-transform: uppercase;
+    padding: 10px 12px 5px;
+    cursor: pointer;
+    border-radius: 8px;
+    margin: 0;
+    font-family: inherit;
+    transition: color 0.15s, background 0.15s;
+}
+.sidebar .nav-group-btn:hover {
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.75);
+}
+.nav-arr {
+    font-size: 14px;
+    line-height: 1;
+    display: inline-block;
+    transition: transform 0.18s;
+    color: rgba(255,255,255,0.28);
+}
+.nav-group.open .nav-arr { transform: rotate(90deg); color: rgba(255,255,255,0.55); }
+
+.nav-group-body { display: none; padding-bottom: 4px; }
+.nav-group.open .nav-group-body { display: block; }
+
+.nav-group-body a {
+    display: block;
+    padding: 8px 12px 8px 20px;
+    color: rgba(255,255,255,0.68);
+    border-radius: 8px;
+    font-size: 13.5px;
+    margin-bottom: 1px;
+    transition: background 0.12s, color 0.12s;
+}
+.nav-group-body a:hover {
+    background: rgba(255,255,255,0.09);
+    color: #fff;
+}
+.nav-group-body a.active {
+    background: rgba(139,26,26,0.55);
+    color: #fff;
+    font-weight: 600;
+}
+
+.nav-logout {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+.nav-logout a {
+    display: block;
+    padding: 9px 12px;
+    color: rgba(255,120,120,0.8);
+    border-radius: 8px;
+    font-size: 13.5px;
+    transition: background 0.12s, color 0.12s;
+}
+.nav-logout a:hover {
+    background: rgba(255,60,60,0.12);
+    color: #ff8080;
+}
+
 .table-wrap { overflow-x: auto; }
 
 @media (max-width: 900px) {
