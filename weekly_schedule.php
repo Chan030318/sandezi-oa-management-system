@@ -84,6 +84,7 @@ function getWeekDates($startDate = null) {
 
 function shortTimeText($s, $e) {
     if (!$s || !$e) return '';
+    if ($s === '00:00:00' && $e === '00:00:00') return ''; // system shift (leave/trip)
     return substr($s, 0, 5) . '-' . substr($e, 0, 5);
 }
 
@@ -109,7 +110,7 @@ $weekNames = ['周一','周二','周三','周四','周五','周六','周日'];
 
 /* ─── Data ─── */
 $departments = $pdo->query("SELECT id, name FROM departments ORDER BY id ASC")->fetchAll();
-$shifts      = $pdo->query("SELECT * FROM shifts ORDER BY id ASC")->fetchAll();
+$shifts      = $pdo->query("SELECT * FROM shifts WHERE is_system = 0 ORDER BY id ASC")->fetchAll();
 
 $employees = $pdo->query("
     SELECT e.id, e.name, e.position,

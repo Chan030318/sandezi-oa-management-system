@@ -77,7 +77,7 @@ $employees = $pdo->query("
 ")->fetchAll();
 
 // 班次列表
-$shifts = $pdo->query("SELECT * FROM shifts ORDER BY id ASC")->fetchAll();
+$shifts = $pdo->query("SELECT * FROM shifts WHERE is_system = 0 ORDER BY id ASC")->fetchAll();
 
 // 编辑资料
 $editSchedule = null;

@@ -13,6 +13,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (($_POST['action'] ?? '') === 'delete') {
         $id = intval($_POST['id'] ?? 0);
 
+        // 禁止删除系统班次
+        $sys_chk = $pdo->prepare("SELECT is_system FROM shifts WHERE id = ?");
+        $sys_chk->execute([$id]);
+        $sys_row = $sys_chk->fetch();
+        if ($sys_row && $sys_row['is_system']) {
+            $error = '系统班次由请假审批自动管理，不能手动删除。';
+        } else {
         // 检查是否有排班正在使用此班次
         $stmt = $pdo->prepare("SELECT COUNT(*) AS total FROM schedules WHERE shift_id = ?");
         $stmt->execute([$id]);
@@ -27,6 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header("Location: shifts.php");
             exit;
         }
+        } // end else (not system shift)
 
     // 新增 / 编辑班次
     } else {
@@ -64,7 +72,7 @@ if (isset($_GET['edit'])) {
     $edit = $stmt->fetch();
 }
 
-$shifts = $pdo->query("SELECT * FROM shifts ORDER BY start_time ASC")->fetchAll();
+$shifts = $pdo->query("SELECT * FROM shifts WHERE is_system = 0 ORDER BY start_time ASC")->fetchAll();
 ?>
 
 <div class="page-title">

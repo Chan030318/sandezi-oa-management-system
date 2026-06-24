@@ -48,8 +48,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 
 <div class="page-title">
-    <h2>申请请假</h2>
-    <p>员工提交请假申请，提交后等待主管审批。</p>
+    <h2>申请请假 / 出差 / 外出</h2>
+    <p>提交申请后等待主管审批，审批通过后自动写入排班表。</p>
 </div>
 
 <?php if ($msgText): ?>
@@ -78,12 +78,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <p style="font-weight:bold;margin:4px 0 12px;"><?= safe($sessionName) ?></p>
         <?php endif; ?>
 
-        <label>请假类型
+        <label>申请类型
             <select name="leave_type">
-                <option>年假</option>
-                <option>病假</option>
-                <option>事假</option>
-                <option>调休</option>
+                <optgroup label="─── 请假 ───">
+                    <option>年假</option>
+                    <option>病假</option>
+                    <option>事假</option>
+                    <option>婚假</option>
+                    <option>产假</option>
+                    <option>陪产假</option>
+                    <option>丧假</option>
+                    <option>其他</option>
+                </optgroup>
+                <optgroup label="─── 出勤异常 ───">
+                    <option>调休</option>
+                    <option>出差</option>
+                    <option>外出</option>
+                </optgroup>
             </select>
         </label>
 

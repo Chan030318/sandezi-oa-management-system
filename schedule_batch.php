@@ -74,7 +74,7 @@ $employees   = $pdo->query("
     WHERE e.status = 'active'
     ORDER BY e.department_id ASC, e.name ASC
 ")->fetchAll();
-$shifts = $pdo->query("SELECT * FROM shifts ORDER BY id ASC")->fetchAll();
+$shifts = $pdo->query("SELECT * FROM shifts WHERE is_system = 0 ORDER BY id ASC")->fetchAll();
 
 $emp_by_dept = [];
 foreach ($employees as $e) {
