@@ -48,18 +48,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             if (!empty($_POST['id'])) {
                 $shift_id = intval($_POST['id']);
+                // Block editing system shifts
+                $sys_edit = $pdo->prepare("SELECT is_system FROM shifts WHERE id = ?");
+                $sys_edit->execute([$shift_id]);
+                $sys_row2 = $sys_edit->fetch();
+                if ($sys_row2 && $sys_row2['is_system']) {
+                    $error = '系统班次由请假审批自动管理，不能手动编辑。';
+                } else {
                 $stmt = $pdo->prepare("UPDATE shifts SET name=?, start_time=?, end_time=?, description=? WHERE id=?");
                 $stmt->execute([$name, $start_time, $end_time, $description, $shift_id]);
                 write_audit_log('班次管理', '编辑班次', "编辑班次：{$name}（{$start_time}-{$end_time}）");
                 $message = '班次资料已更新';
+                } // end else (not system shift)
             } else {
                 $stmt = $pdo->prepare("INSERT INTO shifts (name, start_time, end_time, description) VALUES (?, ?, ?, ?)");
                 $stmt->execute([$name, $start_time, $end_time, $description]);
                 write_audit_log('班次管理', '新增班次', "新增班次：{$name}（{$start_time}-{$end_time}）");
                 $message = '班次新增成功';
             }
-            header("Location: shifts.php");
-            exit;
+            if (!$error) {
+                header("Location: shifts.php");
+                exit;
+            }
         }
     }
 }

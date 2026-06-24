@@ -1,7 +1,11 @@
 -- ══════════════════════════════════════════════════════════════
 -- SANDEZI OA  Phase 2.2 Migration
--- MySQL 5.7 compatible · Idempotent (safe to run multiple times)
--- Run ONCE on the server BEFORE deploying Phase 2.2 PHP code
+-- MySQL 5.7 compatible
+-- ⚠  RUN EXACTLY ONCE before deploying Phase 2.2 PHP code.
+--    ALTER TABLE ... ADD COLUMN is NOT idempotent (MySQL 5.7
+--    has no ADD COLUMN IF NOT EXISTS). Running twice will fail
+--    with "Duplicate column name". INSERT statements for system
+--    shifts are idempotent via WHERE NOT EXISTS.
 -- ══════════════════════════════════════════════════════════════
 
 -- ─── 1. Expand leaves.status to include Revoked ──────────────

@@ -116,19 +116,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $meId      = intval($me['id'] ?? 0);
 
             if ($action === 'approve' && $leave['status'] === 'Pending') {
-                $result    = syncLeaveToSchedules($pdo, $leaveId, $empId, $lvType, $startDate, $endDate);
-                $syncCount = $result['count'];
-                $origJson  = $result['json'];
+                $pdo->beginTransaction();
+                try {
+                    $result    = syncLeaveToSchedules($pdo, $leaveId, $empId, $lvType, $startDate, $endDate);
+                    $syncCount = $result['count'];
+                    $origJson  = $result['json'];
 
-                $pdo->prepare("
-                    UPDATE leaves
-                    SET status                  = 'Approved',
-                        approve_remark          = '已批准',
-                        original_schedules_json = ?,
-                        approved_by             = ?,
-                        approved_at             = CURRENT_TIMESTAMP
-                    WHERE id = ?
-                ")->execute([$origJson, $meId, $leaveId]);
+                    $pdo->prepare("
+                        UPDATE leaves
+                        SET status                  = 'Approved',
+                            approve_remark          = '已批准',
+                            original_schedules_json = ?,
+                            approved_by             = ?,
+                            approved_at             = CURRENT_TIMESTAMP
+                        WHERE id = ?
+                    ")->execute([$origJson, $meId, $leaveId]);
+
+                    $pdo->commit();
+                } catch (Exception $ex) {
+                    $pdo->rollBack();
+                    throw $ex;
+                }
 
                 write_audit_log('请假管理', '审批通过', "批准请假：{$lvDesc}");
                 if ($syncCount > 0) {
@@ -151,10 +159,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $messageType = 'error';
 
             } elseif ($action === 'revoke' && $leave['status'] === 'Approved') {
-                $restored = revokeLeaveSchedules($pdo, $leaveId, $empId, $leave['original_schedules_json'] ?? null);
-                $pdo->prepare("
-                    UPDATE leaves SET status='Revoked', approve_remark='审批已撤销' WHERE id=?
-                ")->execute([$leaveId]);
+                $pdo->beginTransaction();
+                try {
+                    $restored = revokeLeaveSchedules($pdo, $leaveId, $empId, $leave['original_schedules_json'] ?? null);
+                    $pdo->prepare("
+                        UPDATE leaves SET status='Revoked', approve_remark='审批已撤销' WHERE id=?
+                    ")->execute([$leaveId]);
+                    $pdo->commit();
+                } catch (Exception $ex) {
+                    $pdo->rollBack();
+                    throw $ex;
+                }
                 write_audit_log('请假管理', '撤销审批',
                     "撤销请假审批：{$lvDesc}，" .
                     "已移除排班，恢复原排班 {$restored} 条");

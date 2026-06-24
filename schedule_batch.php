@@ -38,12 +38,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'batch
             $batch_error = '日期范围最多 31 天，请分批操作。';
         } else {
             $stmt = $pdo->prepare("
-                INSERT INTO schedules (employee_id, shift_id, work_date, remark)
-                VALUES (?, ?, ?, ?)
+                INSERT INTO schedules (employee_id, shift_id, work_date, remark, source_leave_id)
+                VALUES (?, ?, ?, ?, NULL)
                 ON DUPLICATE KEY UPDATE
-                    shift_id   = VALUES(shift_id),
-                    remark     = VALUES(remark),
-                    created_at = CURRENT_TIMESTAMP
+                    shift_id        = VALUES(shift_id),
+                    remark          = VALUES(remark),
+                    source_leave_id = NULL,
+                    created_at      = CURRENT_TIMESTAMP
             ");
             $count = 0;
             foreach ($emp_ids as $eid) {

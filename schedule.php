@@ -17,12 +17,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add')
         $messageType = 'error';
     } else {
         $stmt = $pdo->prepare("
-            INSERT INTO schedules (employee_id, shift_id, work_date, remark)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO schedules (employee_id, shift_id, work_date, remark, source_leave_id)
+            VALUES (?, ?, ?, ?, NULL)
             ON DUPLICATE KEY UPDATE
-                shift_id   = VALUES(shift_id),
-                remark     = VALUES(remark),
-                created_at = CURRENT_TIMESTAMP
+                shift_id        = VALUES(shift_id),
+                remark          = VALUES(remark),
+                source_leave_id = NULL,
+                created_at      = CURRENT_TIMESTAMP
         ");
         $stmt->execute([$sch_emp_id, $sch_shf_id, $sch_date, $sch_remark]);
         write_audit_log('排班管理', '新增排班', "员工 ID {$sch_emp_id} 排班日期：{$sch_date}");
@@ -44,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'edit'
     } else {
         $stmt = $pdo->prepare("
             UPDATE schedules
-            SET employee_id = ?, shift_id = ?, work_date = ?, remark = ?
+            SET employee_id = ?, shift_id = ?, work_date = ?, remark = ?, source_leave_id = NULL
             WHERE id = ?
         ");
         $stmt->execute([$sch_emp_id, $sch_shf_id, $sch_date, $sch_remark, $sch_id]);
@@ -57,14 +58,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'edit'
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete') {
     verify_csrf();
     $sch_id = intval($_POST['id']);
-    $del_row = $pdo->prepare("SELECT s.work_date, e.name FROM schedules s LEFT JOIN employees e ON s.employee_id=e.id WHERE s.id=?");
+    $del_row = $pdo->prepare("
+        SELECT s.work_date, s.source_leave_id, e.name
+        FROM schedules s LEFT JOIN employees e ON s.employee_id = e.id WHERE s.id = ?
+    ");
     $del_row->execute([$sch_id]);
     $del_info = $del_row->fetch();
-    $pdo->prepare("DELETE FROM schedules WHERE id = ?")->execute([$sch_id]);
-    $del_desc = $del_info ? "员工：{$del_info['name']}，日期：{$del_info['work_date']}" : "ID {$sch_id}";
-    write_audit_log('排班管理', '删除排班', "删除排班：{$del_desc}");
-    $message = '排班已删除';
-    $messageType = 'success';
+
+    if ($del_info && $del_info['source_leave_id']) {
+        // Leave-sourced rows must be removed via revoke in leave_manage.php
+        $message     = '该排班由请假审批自动生成，请在【请假审批】页面撤销对应审批来移除排班。';
+        $messageType = 'error';
+    } else {
+        $pdo->prepare("DELETE FROM schedules WHERE id = ?")->execute([$sch_id]);
+        $del_desc = $del_info ? "员工：{$del_info['name']}，日期：{$del_info['work_date']}" : "ID {$sch_id}";
+        write_audit_log('排班管理', '删除排班', "删除排班：{$del_desc}");
+        $message = '排班已删除';
+        $messageType = 'success';
+    }
 }
 
 // 员工列表

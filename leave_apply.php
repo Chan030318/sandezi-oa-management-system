@@ -1,4 +1,5 @@
 <?php
+ob_start();
 require_once __DIR__ . '/header.php';
 
 $message    = '';
@@ -23,12 +24,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$employeeId) {
         $message = 'error:此账号尚未绑定员工资料，无法提交请假申请。';
     } else {
-        $leave_type = $_POST['leave_type'] ?? '年假';
-        $start_date = $_POST['start_date'] ?? '';
-        $end_date   = $_POST['end_date']   ?? '';
-        $reason     = trim($_POST['reason'] ?? '');
+        $allowed_types = ['年假','病假','事假','婚假','产假','陪产假','丧假','其他','调休','出差','外出'];
+        $leave_type    = $_POST['leave_type'] ?? '';
+        $start_date    = $_POST['start_date'] ?? '';
+        $end_date      = $_POST['end_date']   ?? '';
+        $reason        = trim($_POST['reason'] ?? '');
 
-        if (!$start_date || !$end_date) {
+        if (!in_array($leave_type, $allowed_types, true)) {
+            $message = 'error:申请类型无效，请重新选择。';
+        } elseif (!$start_date || !$end_date) {
             $message = 'error:请填写请假开始与结束日期。';
         } elseif ($end_date < $start_date) {
             $message = 'error:结束日期不能早于开始日期。';
